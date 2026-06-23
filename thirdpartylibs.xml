@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<libraries>
+    <library>
+        <location>amd/src/vendor/cropper.js</location>
+        <name>cropperjs</name>
+        <version>1.6.2</version>
+        <license>MIT</license>
+        <licenseversion></licenseversion>
+    </library>
+    <library>
+        <location>cropper.css</location>
+        <name>cropperjs</name>
+        <version>1.6.2</version>
+        <license>MIT</license>
+        <licenseversion></licenseversion>
+    </library>
+</libraries>

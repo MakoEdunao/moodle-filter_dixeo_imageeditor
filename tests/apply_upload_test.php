@@ -1,0 +1,192 @@
+<?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * Tests for apply_upload external.
+ *
+ * @package    filter_dixeo_imageeditor
+ * @category   test
+ * @copyright  2026 Dixeo
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+namespace filter_dixeo_imageeditor;
+
+use context_module;
+use filter_dixeo_imageeditor\external\apply_upload;
+use filter_dixeo_imageeditor\local\file_replacer;
+use filter_dixeo_imageeditor\local\location_key;
+use filter_dixeo_imageeditor\local\lock_manager;
+
+defined('MOODLE_INTERNAL') || die();
+
+global $CFG;
+require_once($CFG->dirroot . '/mod/page/lib.php');
+
+/**
+ * @covers \filter_dixeo_imageeditor\external\apply_upload
+ */
+final class apply_upload_test extends \advanced_testcase {
+
+    private static function fixture_png_bytes(): string {
+        global $CFG;
+        return (string) file_get_contents($CFG->dirroot . '/lib/filestorage/tests/fixtures/testimage.png');
+    }
+
+    private static function fixture_jpeg_bytes(): string {
+        global $CFG;
+        return (string) file_get_contents($CFG->dirroot . '/lib/filestorage/tests/fixtures/testimage.jpg');
+    }
+
+    public function setUp(): void {
+        parent::setUp();
+        $this->resetAfterTest(true);
+    }
+
+    /**
+     * @return array{0: location_key, 1: int}
+     */
+    private function create_page_image_location(): array {
+        global $USER;
+
+        $this->setAdminUser();
+        $gen = $this->getDataGenerator();
+        $course = $gen->create_course();
+        $page = $gen->create_module('page', ['course' => $course->id]);
+        $context = context_module::instance($page->cmid);
+
+        $draftitemid = file_get_unused_draft_itemid();
+        $fs = get_file_storage();
+        $fs->create_file_from_string([
+            'contextid' => \context_user::instance($USER->id)->id,
+            'component' => 'user',
+            'filearea' => 'draft',
+            'itemid' => $draftitemid,
+            'filepath' => '/',
+            'filename' => 'embedded.png',
+        ], self::fixture_png_bytes());
+
+        file_save_draft_area_files(
+            $draftitemid,
+            $context->id,
+            'mod_page',
+            'content',
+            0,
+            ['subdirs' => 0, 'maxfiles' => 1]
+        );
+
+        $file = $fs->get_file($context->id, 'mod_page', 'content', 0, '/', 'embedded.png');
+        $this->assertNotFalse($file);
+
+        return [location_key::from_stored_file($file), (int) $course->id];
+    }
+
+    public function test_apply_upload_replaces_file_and_archives(): void {
+        global $DB, $USER;
+
+        [$location, $courseid] = $this->create_page_image_location();
+        $originalhash = $location->get_stored_file()->get_contenthash();
+        $jpegb64 = base64_encode(self::fixture_jpeg_bytes());
+
+        $result = apply_upload::execute(
+            $location->contextid,
+            $location->component,
+            $location->filearea,
+            $location->itemid,
+            $location->filepath,
+            $location->filename,
+            $courseid,
+            $jpegb64
+        );
+
+        $this->assertNotEmpty($result['imageurl']);
+        $this->assertNotSame($originalhash, $result['current_contenthash']);
+
+        $version = $DB->get_record('filter_dixeo_imageeditor_version', [
+            'locationhash' => $location->hash(),
+            'contenthash' => $originalhash,
+        ]);
+        $this->assertNotFalse($version);
+        $this->assertSame(file_replacer::SOURCE_UPLOAD, $version->source);
+    }
+
+    public function test_apply_upload_rejects_empty_payload(): void {
+        [$location, $courseid] = $this->create_page_image_location();
+
+        try {
+            apply_upload::execute(
+                $location->contextid,
+                $location->component,
+                $location->filearea,
+                $location->itemid,
+                $location->filepath,
+                $location->filename,
+                $courseid,
+                ''
+            );
+            $this->fail('Expected moodle_exception');
+        } catch (\moodle_exception $e) {
+            $this->assertSame('error_upload_invalid_image', $e->errorcode);
+        }
+    }
+
+    public function test_apply_upload_rejects_invalid_mime(): void {
+        [$location, $courseid] = $this->create_page_image_location();
+
+        try {
+            apply_upload::execute(
+                $location->contextid,
+                $location->component,
+                $location->filearea,
+                $location->itemid,
+                $location->filepath,
+                $location->filename,
+                $courseid,
+                base64_encode('not-a-web-image')
+            );
+            $this->fail('Expected moodle_exception');
+        } catch (\moodle_exception $e) {
+            $this->assertSame('error_upload_invalid_image', $e->errorcode);
+        }
+    }
+
+    public function test_apply_upload_rejects_when_locked(): void {
+        global $USER;
+
+        [$location, $courseid] = $this->create_page_image_location();
+        lock_manager::create_lock($location, 'job-locked', (int) $USER->id);
+        lock_manager::update_status(
+            (int) lock_manager::get_active_lock($location)->id,
+            lock_manager::STATUS_PROCESSING
+        );
+
+        try {
+            apply_upload::execute(
+                $location->contextid,
+                $location->component,
+                $location->filearea,
+                $location->itemid,
+                $location->filepath,
+                $location->filename,
+                $courseid,
+                base64_encode(self::fixture_jpeg_bytes())
+            );
+            $this->fail('Expected moodle_exception');
+        } catch (\moodle_exception $e) {
+            $this->assertSame('error_upload_blocked', $e->errorcode);
+        }
+    }
+}

@@ -1,0 +1,114 @@
+<?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+
+namespace filter_dixeo_imageeditor\local;
+
+defined('MOODLE_INTERNAL') || die();
+
+/**
+ * Helpers for validating uploaded web images.
+ *
+ * @package    filter_dixeo_imageeditor
+ * @copyright  2026 Dixeo
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+final class image_util {
+
+    /**
+     * Resolve the effective upload limit for the current user in a course.
+     *
+     * Matches {@see \local_dixeo\service\manual_upload_service::stage_upload_to_draft()}.
+     *
+     * @param int $courseid
+     * @return int
+     */
+    public static function get_max_upload_bytes(int $courseid): int {
+        global $CFG;
+
+        $course = get_course($courseid);
+        $context = \context_course::instance($courseid);
+
+        return get_user_max_upload_file_size($context, $CFG->maxbytes, $course->maxbytes);
+    }
+
+    /**
+     * HTML file input accept attribute for Moodle web_image types.
+     *
+     * @return string
+     */
+    public static function get_web_image_accept_attribute(): string {
+        $extensions = file_get_typegroup('extension', 'web_image');
+        return implode(',', $extensions);
+    }
+
+    /**
+     * Validate image bytes against Moodle web_image types.
+     *
+     * @param string $binary
+     * @param int $courseid Course id for maxbytes check.
+     * @param string $errorstring Language string key when validation fails.
+     * @return void
+     */
+    public static function assert_valid_web_image(
+        string $binary,
+        int $courseid,
+        string $errorstring = 'error_upload_invalid_image'
+    ): void {
+        if ($binary === '') {
+            throw new \moodle_exception($errorstring, 'filter_dixeo_imageeditor');
+        }
+
+        $maxbytes = self::get_max_upload_bytes($courseid);
+        if ($maxbytes != USER_CAN_IGNORE_FILE_SIZE_LIMITS && strlen($binary) > $maxbytes) {
+            throw new \moodle_exception('uploadfilelimitexceeded', 'error');
+        }
+
+        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+        $mimetype = $finfo->buffer($binary);
+        if (!is_string($mimetype) || !file_mimetype_in_typegroup($mimetype, 'web_image')) {
+            throw new \moodle_exception($errorstring, 'filter_dixeo_imageeditor');
+        }
+
+        if ($mimetype === 'image/svg+xml') {
+            return;
+        }
+
+        if (@getimagesizefromstring($binary) === false) {
+            throw new \moodle_exception($errorstring, 'filter_dixeo_imageeditor');
+        }
+    }
+
+    /**
+     * Decode a base64 image payload from the browser.
+     *
+     * @param string $payload
+     * @return string
+     */
+    public static function decode_image_base64(string $payload): string {
+        $payload = trim($payload);
+        if ($payload === '') {
+            return '';
+        }
+
+        if (strpos($payload, 'base64,') !== false) {
+            $parts = explode('base64,', $payload, 2);
+            $payload = $parts[1];
+        }
+
+        $binary = base64_decode($payload, true);
+        return $binary === false ? '' : $binary;
+    }
+}

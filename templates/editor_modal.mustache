@@ -1,0 +1,231 @@
+{{!
+    @template filter_dixeo_imageeditor/editor_modal
+
+    Modal body for AI image generate/edit.
+}}
+<div class="dixeo-imageeditor-modal" data-region="modal-root">
+    <div class="row">
+        {{#show_ai_panel}}
+        <div class="col-xl-4 col-lg-5" data-region="ai-panel">
+            {{#show_mode_toggle}}
+            <div class="dixeo-imageeditor-modal__mode-toggle mb-3">
+                <div class="btn-group btn-group-toggle w-100" data-toggle="buttons">
+                    <label class="btn btn-outline-secondary {{#mode_generate_active}}active{{/mode_generate_active}}">
+                        <input
+                            type="radio"
+                            class="btn-check"
+                            name="dixeo-imageeditor-mode"
+                            value="generate"
+                            data-action="mode-generate"
+                            {{#mode_generate_active}}checked{{/mode_generate_active}}
+                        >
+                        {{#str}} mode_new_image, filter_dixeo_imageeditor {{/str}}
+                    </label>
+                    <label class="btn btn-outline-secondary {{#mode_edit_active}}active{{/mode_edit_active}}">
+                        <input
+                            type="radio"
+                            class="btn-check"
+                            name="dixeo-imageeditor-mode"
+                            value="edit"
+                            data-action="mode-edit"
+                            {{#mode_edit_active}}checked{{/mode_edit_active}}
+                        >
+                        {{#str}} mode_edit_current_image, filter_dixeo_imageeditor {{/str}}
+                    </label>
+                </div>
+            </div>
+            {{/show_mode_toggle}}
+
+            <div class="form-group mb-3">
+                <p
+                    class="dixeo-imageeditor-modal__prompt-label mb-1"
+                    data-region="prompt-label"
+                >
+                    {{#mode_edit_active}}{{#show_ai_edit_mode}}{{#str}} prompt_label_edit, filter_dixeo_imageeditor {{/str}}{{/show_ai_edit_mode}}{{/mode_edit_active}}
+                    {{^mode_edit_active}}{{#str}} prompt_label_generate, filter_dixeo_imageeditor {{/str}}{{/mode_edit_active}}
+                </p>
+                <textarea
+                    class="form-control dixeo-imageeditor-modal__prompt"
+                    rows="4"
+                    data-region="prompt"
+                    {{#mode_edit_active}}{{#show_ai_edit_mode}}placeholder="{{#str}} prompt_placeholder_edit, filter_dixeo_imageeditor {{/str}}"{{/show_ai_edit_mode}}{{/mode_edit_active}}
+                    {{^mode_edit_active}}placeholder="{{#str}} prompt_placeholder_generate, filter_dixeo_imageeditor {{/str}}"{{/mode_edit_active}}
+                ></textarea>
+            </div>
+
+            <span class="font-weight-bold">{{#str}} quality_label, filter_dixeo_imageeditor {{/str}}</span>
+            <div class="dixeo-imageeditor-modal__toggle-container mt-1 mb-3">
+                <div class="btn-group btn-group-toggle w-100" data-toggle="buttons">
+                    {{#qualities}}
+                    <label class="btn btn-outline-secondary {{#selected}}active{{/selected}}">
+                        <input
+                            type="radio"
+                            class="btn-check"
+                            name="dixeo-imageeditor-quality"
+                            value="{{value}}"
+                            data-region="quality"
+                            {{#selected}}checked{{/selected}}
+                        >
+                        {{#low}}{{#str}} quality_low, filter_dixeo_imageeditor {{/str}}{{/low}}
+                        {{#medium}}{{#str}} quality_medium, filter_dixeo_imageeditor {{/str}}{{/medium}}
+                        {{#high}}{{#str}} quality_high, filter_dixeo_imageeditor {{/str}}{{/high}}
+                    </label>
+                    {{/qualities}}
+                </div>
+            </div>
+
+            <span class="font-weight-bold">{{#str}} shape_label, filter_dixeo_imageeditor {{/str}}</span>
+            <div class="dixeo-imageeditor-modal__aspect-container mt-1 mb-3">
+                <div class="btn-group btn-group-toggle w-100" data-toggle="buttons">
+                    {{#aspects}}
+                    <label class="btn btn-outline-secondary {{#selected}}active{{/selected}}">
+                        <input
+                            type="radio"
+                            class="btn-check"
+                            name="dixeo-imageeditor-aspect"
+                            value="{{value}}"
+                            data-size="{{size}}"
+                            data-region="aspect"
+                            {{#selected}}checked{{/selected}}
+                        >
+                        <span class="d-block"><i class="fas {{icon}}"></i></span>
+                        {{#landscape}}{{#str}} shape_landscape, filter_dixeo_imageeditor {{/str}}{{/landscape}}
+                        {{#square}}{{#str}} shape_square, filter_dixeo_imageeditor {{/str}}{{/square}}
+                        {{#portrait}}{{#str}} shape_portrait, filter_dixeo_imageeditor {{/str}}{{/portrait}}
+                    </label>
+                    {{/aspects}}
+                </div>
+            </div>
+
+            <button
+                type="button"
+                class="dixeo-imageeditor-modal__submit w-100 mt-3"
+                data-action="submit-job"
+                data-region="submit-job"
+            >
+                {{#mode_edit_active}}{{#show_ai_edit_mode}}{{#str}} submit_edit, filter_dixeo_imageeditor {{/str}}{{/show_ai_edit_mode}}{{/mode_edit_active}}
+                {{^mode_edit_active}}{{#str}} submit_generate, filter_dixeo_imageeditor {{/str}}{{/mode_edit_active}}
+            </button>
+        </div>
+        {{/show_ai_panel}}
+        <div class="{{#show_ai_panel}}col-xl-8 col-lg-7{{/show_ai_panel}}{{^show_ai_panel}}col-12{{/show_ai_panel}}">
+            <div class="dixeo-imageeditor-modal__preview text-center mt-3 mt-lg-0" data-region="preview-panel">
+                <div class="dixeo-imageeditor-modal__preview-actions" data-region="preview-actions">
+                    {{#can_manage_image}}
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-light dixeo-imageeditor-modal__upload-btn"
+                        data-action="upload-image"
+                        aria-label="{{#str}} upload_image, filter_dixeo_imageeditor {{/str}}"
+                        title="{{#str}} upload_image, filter_dixeo_imageeditor {{/str}}"
+                    >
+                        <i class="fa fa-upload" aria-hidden="true"></i>
+                        <span>{{#str}} upload_image, filter_dixeo_imageeditor {{/str}}</span>
+                    </button>
+                    <input
+                        type="file"
+                        class="d-none"
+                        data-region="upload-input"
+                        accept="{{upload_accept}}"
+                    >
+                    {{/can_manage_image}}
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-light dixeo-imageeditor-modal__manual-start"
+                        data-action="manual-edit-start"
+                        aria-label="{{#str}} manual_edit_start, filter_dixeo_imageeditor {{/str}}"
+                        title="{{#str}} manual_edit_start, filter_dixeo_imageeditor {{/str}}"
+                    >
+                        <i class="fa fa-pencil" aria-hidden="true"></i>
+                    </button>
+                    <div class="dixeo-imageeditor-modal__manual-save-discard d-none" data-region="manual-save-discard">
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-primary"
+                            data-action="manual-save"
+                        >{{#str}} manual_save, filter_dixeo_imageeditor {{/str}}</button>
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-secondary"
+                            data-action="manual-discard"
+                        >{{#str}} manual_discard, filter_dixeo_imageeditor {{/str}}</button>
+                    </div>
+                </div>
+                <div class="dixeo-imageeditor-modal__preview-toolbars d-none" data-region="preview-toolbars">
+                    <div class="dixeo-imageeditor-modal__toolbar dixeo-imageeditor-modal__toolbar--top" role="toolbar" aria-label="{{#str}} manual_toolbar_history, filter_dixeo_imageeditor {{/str}}">
+                        <button type="button" class="btn btn-sm btn-light dixeo-imageeditor-modal__toolbar-textbtn" data-action="manual-undo" title="{{#str}} manual_undo, filter_dixeo_imageeditor {{/str}}">
+                            <i class="fa fa-undo" aria-hidden="true"></i>
+                            <span>{{#str}} manual_undo, filter_dixeo_imageeditor {{/str}}</span>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-light dixeo-imageeditor-modal__toolbar-textbtn" data-action="manual-redo" title="{{#str}} manual_redo, filter_dixeo_imageeditor {{/str}}">
+                            <i class="fa fa-redo" aria-hidden="true"></i>
+                            <span>{{#str}} manual_redo, filter_dixeo_imageeditor {{/str}}</span>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-light dixeo-imageeditor-modal__toolbar-textbtn" data-action="manual-download" title="{{#str}} manual_download, filter_dixeo_imageeditor {{/str}}">
+                            <i class="fa fa-download" aria-hidden="true"></i>
+                            <span>{{#str}} manual_download, filter_dixeo_imageeditor {{/str}}</span>
+                        </button>
+                    </div>
+                    <div class="dixeo-imageeditor-modal__toolbar-row">
+                        <div class="dixeo-imageeditor-modal__toolbar dixeo-imageeditor-modal__toolbar--left" role="toolbar" aria-label="{{#str}} manual_toolbar_adjust, filter_dixeo_imageeditor {{/str}}">
+                            <button type="button" class="btn btn-sm btn-light" data-action="manual-rotate-cw" title="{{#str}} manual_rotate_clockwise, filter_dixeo_imageeditor {{/str}}" aria-label="{{#str}} manual_rotate_clockwise, filter_dixeo_imageeditor {{/str}}">
+                                <i class="fa fa-rotate-right" aria-hidden="true"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-light" data-action="manual-flip-h" title="{{#str}} manual_flip_horizontal, filter_dixeo_imageeditor {{/str}}" aria-label="{{#str}} manual_flip_horizontal, filter_dixeo_imageeditor {{/str}}">
+                                <i class="fa fa-arrows-left-right" aria-hidden="true"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-light" data-action="manual-flip-v" title="{{#str}} manual_flip_vertical, filter_dixeo_imageeditor {{/str}}" aria-label="{{#str}} manual_flip_vertical, filter_dixeo_imageeditor {{/str}}">
+                                <i class="fa fa-arrows-up-down" aria-hidden="true"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-light" data-action="manual-apply-crop" title="{{#str}} manual_apply_crop, filter_dixeo_imageeditor {{/str}}" aria-label="{{#str}} manual_apply_crop, filter_dixeo_imageeditor {{/str}}">
+                                <i class="fa fa-crop" aria-hidden="true"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-light" data-action="manual-filter-grayscale" title="{{#str}} manual_filter_grayscale, filter_dixeo_imageeditor {{/str}}" aria-label="{{#str}} manual_filter_grayscale, filter_dixeo_imageeditor {{/str}}">
+                                <i class="fa fa-circle-half-stroke" aria-hidden="true"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-light" data-action="manual-filter-sepia" title="{{#str}} manual_filter_sepia, filter_dixeo_imageeditor {{/str}}" aria-label="{{#str}} manual_filter_sepia, filter_dixeo_imageeditor {{/str}}">
+                                <i class="fa fa-image" aria-hidden="true"></i>
+                            </button>
+                            <span class="dixeo-imageeditor-modal__tone-control">
+                                <button type="button" class="btn btn-sm btn-light" data-action="manual-toggle-brightness" title="{{#str}} manual_brightness, filter_dixeo_imageeditor {{/str}}" aria-label="{{#str}} manual_brightness, filter_dixeo_imageeditor {{/str}}">
+                                    <i class="fa fa-sun" aria-hidden="true"></i>
+                                </button>
+                                <input type="range" class="dixeo-imageeditor-modal__tone-slider d-none" min="50" max="150" value="100" data-region="manual-brightness" aria-label="{{#str}} manual_brightness, filter_dixeo_imageeditor {{/str}}">
+                            </span>
+                            <span class="dixeo-imageeditor-modal__tone-control">
+                                <button type="button" class="btn btn-sm btn-light" data-action="manual-toggle-contrast" title="{{#str}} manual_contrast, filter_dixeo_imageeditor {{/str}}" aria-label="{{#str}} manual_contrast, filter_dixeo_imageeditor {{/str}}">
+                                    <i class="fa fa-adjust" aria-hidden="true"></i>
+                                </button>
+                                <input type="range" class="dixeo-imageeditor-modal__tone-slider d-none" min="50" max="150" value="100" data-region="manual-contrast" aria-label="{{#str}} manual_contrast, filter_dixeo_imageeditor {{/str}}">
+                            </span>
+                        </div>
+                        <div class="dixeo-imageeditor-modal__toolbar dixeo-imageeditor-modal__toolbar--right" role="toolbar" aria-label="{{#str}} manual_toolbar_zoom, filter_dixeo_imageeditor {{/str}}">
+                            <button type="button" class="btn btn-sm btn-light" data-action="manual-zoom-in" title="{{#str}} manual_zoom_in, filter_dixeo_imageeditor {{/str}}" aria-label="{{#str}} manual_zoom_in, filter_dixeo_imageeditor {{/str}}">
+                                <i class="fa fa-search-plus" aria-hidden="true"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-light" data-action="manual-zoom-out" title="{{#str}} manual_zoom_out, filter_dixeo_imageeditor {{/str}}" aria-label="{{#str}} manual_zoom_out, filter_dixeo_imageeditor {{/str}}">
+                                <i class="fa fa-search-minus" aria-hidden="true"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-light" data-action="manual-zoom-reset" title="{{#str}} manual_zoom_reset, filter_dixeo_imageeditor {{/str}}" aria-label="{{#str}} manual_zoom_reset, filter_dixeo_imageeditor {{/str}}">
+                                <i class="fa fa-compress" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="dixeo-imageeditor-modal__preview-stage" data-region="preview-stage">
+                    <img src="{{imageurl}}" alt="" class="dixeo-imageeditor-modal__image" data-region="preview-image">
+                    <canvas class="dixeo-imageeditor-modal__canvas d-none" data-region="preview-canvas" aria-hidden="true"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{#has_history}}
+    <div class="dixeo-imageeditor-modal__history mt-3" data-region="history-wrapper">
+        <div class="dixeo-imageeditor-modal__history-label">{{#str}} history_label, filter_dixeo_imageeditor {{/str}}</div>
+        <div data-region="history-section">
+            {{> filter_dixeo_imageeditor/history_carousel }}
+        </div>
+    </div>
+    {{/has_history}}
+</div>

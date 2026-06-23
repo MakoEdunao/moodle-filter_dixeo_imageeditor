@@ -1,0 +1,54 @@
+{{!
+    @template filter_dixeo_imageeditor/history_carousel
+
+    Scrollable version history thumbnails with per-item actions menu.
+}}
+<div class="dixeo-imageeditor-modal__carousel" data-region="history-carousel">
+    {{#history}}
+    <div class="dixeo-imageeditor-modal__history-item{{#is_current}} is-current{{/is_current}}" data-versionid="{{id}}" title="{{#userdate}} {{timecreated}}, {{#str}} strftimedatetimeshort, core_langconfig {{/str}} {{/userdate}}">
+        <button
+            type="button"
+            class="dixeo-imageeditor-modal__history-thumb-btn"
+            data-action="preview-history"
+            data-versionid="{{id}}"
+            title="{{#userdate}} {{timecreated}}, {{#str}} strftimedatetimeshort, core_langconfig {{/str}} {{/userdate}}"
+        >
+            <img src="{{previewurl}}" alt="" class="dixeo-imageeditor-modal__history-thumb">
+        </button>
+        <div class="dropdown dixeo-imageeditor-modal__history-menu">
+            <button
+                type="button"
+                class="btn btn-sm btn-light dropdown-toggle dixeo-imageeditor-modal__history-menu-toggle"
+                data-toggle="dropdown"
+                aria-haspopup="true"
+                aria-expanded="false"
+                aria-label="{{#str}} history_actions, filter_dixeo_imageeditor {{/str}}"
+            >
+                <i class="icon fa fa-ellipsis-v fa-fw" aria-hidden="true"></i>
+            </button>
+            <div class="dropdown-menu dropdown-menu-right">
+                <button
+                    type="button"
+                    class="dropdown-item"
+                    role="menuitem"
+                    data-action="set-current"
+                    data-versionid="{{id}}"
+                >
+                    {{#str}} history_set_current, filter_dixeo_imageeditor {{/str}}
+                </button>
+                {{^is_current}}
+                <button
+                    type="button"
+                    class="dropdown-item text-danger"
+                    role="menuitem"
+                    data-action="delete-history"
+                    data-versionid="{{id}}"
+                >
+                    {{#str}} history_delete, filter_dixeo_imageeditor {{/str}}
+                </button>
+                {{/is_current}}
+            </div>
+        </div>
+    </div>
+    {{/history}}
+</div>
