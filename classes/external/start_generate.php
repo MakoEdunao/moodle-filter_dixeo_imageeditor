@@ -118,11 +118,21 @@ final class start_generate extends external_api {
             throw new \moodle_exception('dixeo_image_job_empty_result', 'local_dixeo');
         }
 
+        $modemapping = [
+            '1536x1024' => 'landscape',
+            '1024x1536' => 'portrait',
+            '1024x1024' => 'square',
+        ];
+        $mode = $modemapping[$params['size']] ?? 'landscape';
+
         return self::queue_content_image_job(
             $location,
             $jobid,
             (int) $USER->id,
-            file_replacer::SOURCE_GENERATED
+            file_replacer::SOURCE_GENERATED,
+            trim($params['prompt']),
+            $params['quality'],
+            $mode
         );
     }
 

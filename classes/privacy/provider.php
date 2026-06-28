@@ -12,7 +12,7 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Privacy API implementation for filter_dixeo_imageeditor.
@@ -35,7 +35,7 @@ use core_privacy\local\request\writer;
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Privacy provider for version history and job lock metadata.
+ * Privacy provider for version history metadata.
  *
  * @package    filter_dixeo_imageeditor
  * @copyright  2026 Dixeo
@@ -62,20 +62,6 @@ class provider implements
             'privacy:metadata:versiontable'
         );
 
-        $collection->add_database_table(
-            'filter_dixeo_imageeditor_lock',
-            [
-                'filename' => 'privacy:metadata:filename',
-                'jobid' => 'privacy:metadata:jobid',
-                'userid' => 'privacy:metadata:userid',
-                'status' => 'privacy:metadata:status',
-                'errormessage' => 'privacy:metadata:errormessage',
-                'timecreated' => 'privacy:metadata:timecreated',
-                'timemodified' => 'privacy:metadata:timemodified',
-            ],
-            'privacy:metadata:locktable'
-        );
-
         return $collection;
     }
 
@@ -90,16 +76,11 @@ class provider implements
                        SELECT DISTINCT v.contextid
                          FROM {filter_dixeo_imageeditor_version} v
                         WHERE v.usermodified = :useridversion
-                       UNION
-                       SELECT DISTINCT l.contextid
-                         FROM {filter_dixeo_imageeditor_lock} l
-                        WHERE l.userid = :useridlock
                  )";
 
         $contextlist = new contextlist();
         $contextlist->add_from_sql($sql, [
             'useridversion' => $userid,
-            'useridlock' => $userid,
         ]);
 
         return $contextlist;
@@ -109,22 +90,15 @@ class provider implements
      * @param userlist $userlist
      */
     public static function get_users_in_context(userlist $userlist): void {
-        global $DB;
-
         $context = $userlist->get_context();
         $contextid = (int) $context->id;
 
         $sql = "SELECT DISTINCT v.usermodified AS userid
                   FROM {filter_dixeo_imageeditor_version} v
-                 WHERE v.contextid = :contextidversion
-                 UNION
-                SELECT DISTINCT l.userid
-                  FROM {filter_dixeo_imageeditor_lock} l
-                 WHERE l.contextid = :contextidlock";
+                 WHERE v.contextid = :contextidversion";
 
         $userlist->add_from_sql('userid', $sql, [
             'contextidversion' => $contextid,
-            'contextidlock' => $contextid,
         ]);
     }
 
@@ -156,29 +130,6 @@ class provider implements
                     (object) ['versions' => $exportversions]
                 );
             }
-
-            $locks = $DB->get_records('filter_dixeo_imageeditor_lock', [
-                'contextid' => $context->id,
-                'userid' => $userid,
-            ], 'timecreated ASC');
-
-            if (!empty($locks)) {
-                $exportlocks = [];
-                foreach ($locks as $lock) {
-                    $exportlocks[] = (object) [
-                        'filename' => $lock->filename,
-                        'jobid' => $lock->jobid,
-                        'status' => $lock->status,
-                        'errormessage' => $lock->errormessage,
-                        'timecreated' => transform::datetime($lock->timecreated),
-                        'timemodified' => transform::datetime($lock->timemodified),
-                    ];
-                }
-                writer::with_context($context)->export_data(
-                    [get_string('privacy:pathlocks', 'filter_dixeo_imageeditor')],
-                    (object) ['locks' => $exportlocks]
-                );
-            }
         }
     }
 
@@ -189,7 +140,6 @@ class provider implements
         global $DB;
 
         $DB->delete_records('filter_dixeo_imageeditor_version', ['contextid' => $context->id]);
-        $DB->delete_records('filter_dixeo_imageeditor_lock', ['contextid' => $context->id]);
     }
 
     /**
@@ -204,10 +154,6 @@ class provider implements
             $DB->delete_records('filter_dixeo_imageeditor_version', [
                 'contextid' => $context->id,
                 'usermodified' => $userid,
-            ]);
-            $DB->delete_records('filter_dixeo_imageeditor_lock', [
-                'contextid' => $context->id,
-                'userid' => $userid,
             ]);
         }
     }
@@ -224,10 +170,6 @@ class provider implements
             $DB->delete_records('filter_dixeo_imageeditor_version', [
                 'contextid' => $context->id,
                 'usermodified' => $userid,
-            ]);
-            $DB->delete_records('filter_dixeo_imageeditor_lock', [
-                'contextid' => $context->id,
-                'userid' => $userid,
             ]);
         }
     }

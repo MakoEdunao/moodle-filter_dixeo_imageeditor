@@ -649,6 +649,26 @@ const openEditor = (wrap) => {
         const promptLabel = root.querySelector('[data-region="prompt-label"]');
         const submitButton = root.querySelector('[data-region="submit-job"]');
 
+        if (context.prefill_prompt && promptField instanceof HTMLTextAreaElement) {
+            promptField.value = context.prefill_prompt;
+        }
+        if (context.prefill_quality) {
+            const qualityInput = root.querySelector(
+                'input[name="dixeo-imageeditor-quality"][value="' + context.prefill_quality + '"]'
+            );
+            if (qualityInput instanceof HTMLInputElement) {
+                qualityInput.checked = true;
+            }
+        }
+        if (context.prefill_mode) {
+            const aspectInput = root.querySelector(
+                'input[name="dixeo-imageeditor-aspect"][value="' + context.prefill_mode + '"]'
+            );
+            if (aspectInput instanceof HTMLInputElement) {
+                aspectInput.checked = true;
+            }
+        }
+
         const updateSubmitLabel = async() => {
             if (!(submitButton instanceof HTMLButtonElement)) {
                 return;

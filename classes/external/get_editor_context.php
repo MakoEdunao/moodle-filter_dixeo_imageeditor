@@ -79,6 +79,15 @@ final class get_editor_context extends external_api {
         $caps = feature_gate::capability_flags($location->courseid);
         $status = lock_manager::get_location_status($location, false);
 
+        $prefillprompt = '';
+        $prefillquality = 'medium';
+        $prefillmode = 'landscape';
+        if (($status['status'] ?? '') === lock_manager::STATUS_FAILED) {
+            $prefillprompt = (string) ($status['prefill_prompt'] ?? '');
+            $prefillquality = (string) ($status['prefill_quality'] ?? 'medium');
+            $prefillmode = (string) ($status['prefill_mode'] ?? 'landscape');
+        }
+
         return [
             'imageurl' => file_replacer::get_current_image_url($location),
             'current_contenthash' => file_replacer::get_current_contenthash($location),
@@ -90,6 +99,9 @@ final class get_editor_context extends external_api {
             'locked' => lock_manager::has_blocking_lock($location),
             'location_status' => $status,
             'upload_accept' => image_util::get_web_image_accept_attribute(),
+            'prefill_prompt' => $prefillprompt,
+            'prefill_quality' => $prefillquality,
+            'prefill_mode' => $prefillmode,
         ];
     }
 
@@ -108,6 +120,9 @@ final class get_editor_context extends external_api {
             'locked' => new external_value(PARAM_BOOL, 'Job in progress'),
             'location_status' => self::location_status_returns(),
             'upload_accept' => new external_value(PARAM_TEXT, 'Accepted upload file types'),
+            'prefill_prompt' => new external_value(PARAM_RAW, 'Prefill prompt when last job failed', VALUE_DEFAULT, ''),
+            'prefill_quality' => new external_value(PARAM_ALPHA, 'Prefill quality when last job failed', VALUE_DEFAULT, 'medium'),
+            'prefill_mode' => new external_value(PARAM_ALPHA, 'Prefill mode when last job failed', VALUE_DEFAULT, 'landscape'),
         ]);
     }
 }

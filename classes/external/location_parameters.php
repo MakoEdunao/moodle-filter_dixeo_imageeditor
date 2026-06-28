@@ -102,9 +102,12 @@ trait location_parameters {
         location_key $location,
         string $jobid,
         int $userid,
-        string $source
+        string $source,
+        ?string $prompt = null,
+        ?string $quality = null,
+        ?string $mode = null
     ): array {
-        lock_manager::create_lock($location, $jobid, $userid);
+        lock_manager::create_lock($location, $jobid, $userid, $prompt, $quality, $mode);
         lock_manager::queue_poll_task($location, $jobid, $userid, 0, $source);
 
         return ['jobid' => $jobid, 'status' => lock_manager::STATUS_PENDING];
@@ -134,6 +137,9 @@ trait location_parameters {
             'current_contenthash' => new external_value(PARAM_ALPHANUMEXT, 'Current file contenthash', VALUE_OPTIONAL),
             'errormessage' => new external_value(PARAM_RAW, 'Error message', VALUE_OPTIONAL),
             'lockid' => new external_value(PARAM_INT, 'Lock id', VALUE_OPTIONAL),
+            'prefill_prompt' => new external_value(PARAM_RAW, 'Prefill prompt', VALUE_OPTIONAL),
+            'prefill_quality' => new external_value(PARAM_ALPHA, 'Prefill quality', VALUE_OPTIONAL),
+            'prefill_mode' => new external_value(PARAM_ALPHA, 'Prefill mode', VALUE_OPTIONAL),
         ]);
     }
 }
