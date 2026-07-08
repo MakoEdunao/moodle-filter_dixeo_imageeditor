@@ -14,11 +14,12 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle. If not, see <http://www.gnu.org/licenses/>.
 
-namespace filter_dixeo_imageeditor\local;
+namespace filter_dixeo_imageeditor\adapter;
 
 defined('MOODLE_INTERNAL') || die();
 
-use local_dixeo\service\course_image_writer;
+use local_dixeo\service\image\content\location;
+use local_dixeo\service\image\result_helper;
 
 /**
  * Archives versions and performs in-place file replacement.
@@ -29,6 +30,9 @@ use local_dixeo\service\course_image_writer;
  */
 final class file_replacer {
 
+    /** @var string File area for archived version blobs in filter storage. */
+    public const FILEAREA_HISTORY = 'history';
+
     public const SOURCE_GENERATED = 'generated';
     public const SOURCE_EDITED = 'edited';
     public const SOURCE_REVERTED = 'reverted';
@@ -36,14 +40,11 @@ final class file_replacer {
     public const SOURCE_UPLOAD = 'uploaded';
 
     /**
-     * @param location_key $location
+     * @param location $location
      * @return array<int, array<string, mixed>>
      */
-    public static function get_history_for_location(location_key $location): array {
+    public static function get_history_for_location(location $location): array {
         global $DB;
-
-        $fields = $location->to_record_fields();
-        unset($fields['courseid']);
 
         $records = $DB->get_records('filter_dixeo_imageeditor_version', ['locationhash' => $location->hash()], 'timecreated DESC, id DESC');
         $history = [];
@@ -55,16 +56,16 @@ final class file_replacer {
 
     /**
      * @param \stdClass $record
-     * @param location_key $location
+     * @param location $location
      * @return array<string, mixed>
      */
-    private static function format_version_record(\stdClass $record, location_key $location): array {
+    private static function format_version_record(\stdClass $record, location $location): array {
         $systemcontext = \context_system::instance();
         $filepath = self::history_filepath($location);
         $url = \moodle_url::make_pluginfile_url(
             $systemcontext->id,
             'filter_dixeo_imageeditor',
-            location_key::FILEAREA_HISTORY,
+            self::FILEAREA_HISTORY,
             (int) $record->id,
             $filepath,
             self::history_filename($record)
@@ -81,10 +82,10 @@ final class file_replacer {
     }
 
     /**
-     * @param location_key $location
+     * @param location $location
      * @return string
      */
-    public static function get_current_contenthash(location_key $location): string {
+    public static function get_current_contenthash(location $location): string {
         $file = $location->get_stored_file();
         return $file ? $file->get_contenthash() : '';
     }
@@ -111,10 +112,10 @@ final class file_replacer {
     /**
      * Pluginfile URL for the current image with a contenthash rev query param.
      *
-     * @param location_key $location
+     * @param location $location
      * @return string
      */
-    public static function get_current_image_url(location_key $location): string {
+    public static function get_current_image_url(location $location): string {
         return self::append_image_rev(
             $location->get_pluginfile_url(),
             self::get_current_contenthash($location)
@@ -123,10 +124,10 @@ final class file_replacer {
 
     /**
      * @param int $versionid
-     * @param location_key $location
+     * @param location $location
      * @return void
      */
-    public static function delete_version(int $versionid, location_key $location): void {
+    public static function delete_version(int $versionid, location $location): void {
         global $DB;
 
         $version = $DB->get_record('filter_dixeo_imageeditor_version', ['id' => $versionid], '*', MUST_EXIST);
@@ -144,7 +145,7 @@ final class file_replacer {
         $historyfile = $fs->get_file(
             $systemcontext->id,
             'filter_dixeo_imageeditor',
-            location_key::FILEAREA_HISTORY,
+            self::FILEAREA_HISTORY,
             $versionid,
             self::history_filepath($location),
             self::history_filename($version)
@@ -157,12 +158,12 @@ final class file_replacer {
     }
 
     /**
-     * @param location_key $location
+     * @param location $location
      * @param string $source
      * @param int $userid
      * @return int|null Version row id, or null when content is already archived
      */
-    public static function archive_current(location_key $location, string $source, int $userid): ?int {
+    public static function archive_current(location $location, string $source, int $userid): ?int {
         global $DB;
 
         $file = $location->get_stored_file();
@@ -190,7 +191,7 @@ final class file_replacer {
         $record = [
             'contextid' => $systemcontext->id,
             'component' => 'filter_dixeo_imageeditor',
-            'filearea' => location_key::FILEAREA_HISTORY,
+            'filearea' => self::FILEAREA_HISTORY,
             'itemid' => $versionid,
             'filepath' => self::history_filepath($location),
             'filename' => self::history_filename((object) ['id' => $versionid, 'timecreated' => $now]),
@@ -205,19 +206,19 @@ final class file_replacer {
     }
 
     /**
-     * @param location_key $location
+     * @param location $location
      * @param array $jobresult
      * @param int $userid
      * @param string $source
      * @return void
      */
     public static function apply_job_result(
-        location_key $location,
+        location $location,
         array $jobresult,
         int $userid,
         string $source = self::SOURCE_GENERATED
     ): void {
-        $binary = course_image_writer::extract_image_binary_from_result($jobresult);
+        $binary = result_helper::extract_image_binary_from_result($jobresult);
         if ($binary === '') {
             throw new \moodle_exception('dixeo_image_job_empty_result', 'local_dixeo');
         }
@@ -225,13 +226,13 @@ final class file_replacer {
     }
 
     /**
-     * @param location_key $location
+     * @param location $location
      * @param string $binary
      * @param int $userid
      * @param string $source
      * @return void
      */
-    public static function apply_binary(location_key $location, string $binary, int $userid, string $source): void {
+    public static function apply_binary(location $location, string $binary, int $userid, string $source): void {
         $file = $location->get_stored_file();
         if (!$file) {
             throw new \moodle_exception('error_not_eligible', 'filter_dixeo_imageeditor');
@@ -242,12 +243,12 @@ final class file_replacer {
     }
 
     /**
-     * @param location_key $location
+     * @param location $location
      * @param int $versionid
      * @param int $userid
      * @return string New pluginfile URL
      */
-    public static function revert_to_version(location_key $location, int $versionid, int $userid): string {
+    public static function revert_to_version(location $location, int $versionid, int $userid): string {
         global $DB;
 
         $version = $DB->get_record('filter_dixeo_imageeditor_version', ['id' => $versionid], '*', MUST_EXIST);
@@ -265,7 +266,7 @@ final class file_replacer {
         $historyfile = $fs->get_file(
             $systemcontext->id,
             'filter_dixeo_imageeditor',
-            location_key::FILEAREA_HISTORY,
+            self::FILEAREA_HISTORY,
             $versionid,
             self::history_filepath($location),
             self::history_filename($version)
@@ -290,11 +291,11 @@ final class file_replacer {
     /**
      * Whether an archived version already stores this file content.
      *
-     * @param location_key $location
+     * @param location $location
      * @param string $contenthash
      * @return bool
      */
-    private static function has_history_contenthash(location_key $location, string $contenthash): bool {
+    private static function has_history_contenthash(location $location, string $contenthash): bool {
         global $DB;
 
         return $DB->record_exists('filter_dixeo_imageeditor_version', [
@@ -347,10 +348,10 @@ final class file_replacer {
     }
 
     /**
-     * @param location_key $location
+     * @param location $location
      * @return string
      */
-    private static function history_filepath(location_key $location): string {
+    private static function history_filepath(location $location): string {
         return '/' . $location->contextid . '/' . $location->hash() . '/';
     }
 

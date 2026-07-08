@@ -22,10 +22,10 @@ use core_external\external_api;
 use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_value;
-use filter_dixeo_imageeditor\local\feature_gate;
-use filter_dixeo_imageeditor\local\file_replacer;
-use filter_dixeo_imageeditor\local\image_util;
-use filter_dixeo_imageeditor\local\lock_manager;
+use filter_dixeo_imageeditor\adapter\feature_gate;
+use filter_dixeo_imageeditor\adapter\file_replacer;
+use filter_dixeo_imageeditor\adapter\image_util;
+use local_dixeo\repository\image\job_repository;
 
 /**
  * Load modal context for one image location.
@@ -77,12 +77,12 @@ final class get_editor_context extends external_api {
 
         $policy = feature_gate::policy_flags();
         $caps = feature_gate::capability_flags($location->courseid);
-        $status = lock_manager::get_location_status($location, false);
+        $status = job_repository::get_location_status($location, false);
 
         $prefillprompt = '';
         $prefillquality = 'medium';
         $prefillmode = 'landscape';
-        if (($status['status'] ?? '') === lock_manager::STATUS_FAILED) {
+        if (($status['status'] ?? '') === job_repository::STATUS_FAILED) {
             $prefillprompt = (string) ($status['prefill_prompt'] ?? '');
             $prefillquality = (string) ($status['prefill_quality'] ?? 'medium');
             $prefillmode = (string) ($status['prefill_mode'] ?? 'landscape');
@@ -96,7 +96,7 @@ final class get_editor_context extends external_api {
             'policy_can_edit' => $policy['can_edit'],
             'cap_can_generate' => $caps['can_generate'],
             'cap_can_edit' => $caps['can_edit'],
-            'locked' => lock_manager::has_blocking_lock($location),
+            'locked' => job_repository::has_blocking_job($location),
             'location_status' => $status,
             'upload_accept' => image_util::get_web_image_accept_attribute(),
             'prefill_prompt' => $prefillprompt,

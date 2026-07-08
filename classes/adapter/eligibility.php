@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle. If not, see <http://www.gnu.org/licenses/>.
 
-namespace filter_dixeo_imageeditor\local;
+namespace filter_dixeo_imageeditor\adapter;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -63,7 +63,7 @@ final class eligibility {
      * @return \stored_file|null
      */
     public static function resolve_eligible_file_from_url(string $imageurl): ?\stored_file {
-        $file = \local_dixeo\service\pluginfile_image_helper::get_stored_file_from_pluginfile_url($imageurl);
+        $file = \local_dixeo\service\image\pluginfile_helper::get_stored_file_from_pluginfile_url($imageurl);
         if (!$file || !self::is_eligible_stored_file($file)) {
             return null;
         }

@@ -81,7 +81,7 @@ function filter_dixeo_imageeditor_pluginfile(
         return false;
     }
 
-    $courseid = \local_dixeo\service\pluginfile_image_helper::resolve_course_id_for_file($targetfile);
+    $courseid = \local_dixeo\service\image\pluginfile_helper::resolve_course_id_for_file($targetfile);
     if ($courseid < 1) {
         return false;
     }

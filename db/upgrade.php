@@ -33,13 +33,13 @@ function xmldb_filter_dixeo_imageeditor_upgrade($oldversion) {
 
     $dbman = $DB->get_manager();
 
-    if ($oldversion < 2026062000) {
+    if ($oldversion < 2026070600) {
         if ($dbman->table_exists('filter_dixeo_imageeditor_lock')
-            && $dbman->table_exists('local_dixeo_content_image_job')
+            && $dbman->table_exists('local_dixeo_image_job')
         ) {
             $locks = $DB->get_records('filter_dixeo_imageeditor_lock');
             foreach ($locks as $lock) {
-                if ($DB->record_exists('local_dixeo_content_image_job', ['locationhash' => $lock->locationhash])) {
+                if ($DB->record_exists('local_dixeo_image_job', ['locationhash' => $lock->locationhash])) {
                     continue;
                 }
                 $record = (object) [
@@ -67,7 +67,7 @@ function xmldb_filter_dixeo_imageeditor_upgrade($oldversion) {
                     'timecreated' => $lock->timecreated,
                     'timemodified' => $lock->timemodified,
                 ];
-                $DB->insert_record('local_dixeo_content_image_job', $record);
+                $DB->insert_record('local_dixeo_image_job', $record);
             }
 
             $table = new xmldb_table('filter_dixeo_imageeditor_lock');
@@ -76,7 +76,7 @@ function xmldb_filter_dixeo_imageeditor_upgrade($oldversion) {
             }
         }
 
-        upgrade_plugin_savepoint(true, 2026062000, 'filter', 'dixeo_imageeditor');
+        upgrade_plugin_savepoint(true, 2026070600, 'filter', 'dixeo_imageeditor');
     }
 
     return true;

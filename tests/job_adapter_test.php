@@ -15,7 +15,7 @@
 // along with Moodle. If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Tests for lock_manager.
+ * Tests for job_adapter.
  *
  * @package    filter_dixeo_imageeditor
  * @category   test
@@ -25,15 +25,15 @@
 
 namespace filter_dixeo_imageeditor;
 
-use filter_dixeo_imageeditor\local\lock_manager;
-use filter_dixeo_imageeditor\local\location_key;
+use local_dixeo\repository\image\job_repository;
+use local_dixeo\service\image\content\location;
 
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * @covers \filter_dixeo_imageeditor\local\lock_manager
+ * @covers \local_dixeo\repository\image\job_repository
  */
-final class lock_manager_test extends \advanced_testcase {
+final class job_adapter_test extends \advanced_testcase {
 
     public function setUp(): void {
         parent::setUp();
@@ -44,30 +44,30 @@ final class lock_manager_test extends \advanced_testcase {
         global $USER;
 
         $this->setAdminUser();
-        $location = new location_key(3, 'mod_page', 'content', 0, '/', 'pic.png', 2);
+        $location = new location(3, 'mod_page', 'content', 0, '/', 'pic.png', 2);
 
-        lock_manager::create_lock($location, 'job-123', (int) $USER->id);
-        $this->assertTrue(lock_manager::has_blocking_lock($location));
+        job_repository::create_job($location, 'job-123', (int) $USER->id);
+        $this->assertTrue(job_repository::has_blocking_job($location));
 
-        lock_manager::update_status(
-            (int) lock_manager::get_active_lock($location)->id,
-            lock_manager::STATUS_APPLIED
+        job_repository::update_status(
+            (int) job_repository::get_active_job_for_location($location)->id,
+            job_repository::STATUS_APPLIED
         );
 
-        $status = lock_manager::get_location_status($location, true);
-        $this->assertSame(lock_manager::STATUS_APPLIED, $status['status']);
-        $this->assertFalse(lock_manager::has_blocking_lock($location));
+        $status = job_repository::get_location_status($location, true);
+        $this->assertSame(job_repository::STATUS_APPLIED, $status['status']);
+        $this->assertFalse(job_repository::has_blocking_job($location));
     }
 
     public function test_second_lock_is_rejected_while_pending(): void {
         global $USER;
 
         $this->setAdminUser();
-        $location = new location_key(3, 'mod_page', 'content', 0, '/', 'pic.png', 2);
+        $location = new location(3, 'mod_page', 'content', 0, '/', 'pic.png', 2);
 
-        lock_manager::create_lock($location, 'job-123', (int) $USER->id);
+        job_repository::create_job($location, 'job-123', (int) $USER->id);
 
         $this->expectException(\moodle_exception::class);
-        lock_manager::create_lock($location, 'job-456', (int) $USER->id);
+        job_repository::create_job($location, 'job-456', (int) $USER->id);
     }
 }

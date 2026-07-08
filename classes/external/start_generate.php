@@ -22,10 +22,10 @@ use core_external\external_api;
 use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_value;
-use filter_dixeo_imageeditor\local\file_replacer;
-use filter_dixeo_imageeditor\local\lock_manager;
+use filter_dixeo_imageeditor\adapter\file_replacer;
+use local_dixeo\repository\image\job_repository;
 use local_dixeo\external\service_factory;
-use local_dixeo\local\content_image_capability;
+use local_dixeo\service\image\content\capability;
 use local_dixeo\service\image_generation_service;
 
 /**
@@ -91,13 +91,13 @@ final class start_generate extends external_api {
         ]);
 
         $location = self::validate_location($params);
-        content_image_capability::require_generate($location->courseid);
+        capability::require_generate($location->courseid);
 
         if (trim($params['prompt']) === '') {
             throw new \moodle_exception('prompt_required', 'filter_dixeo_imageeditor');
         }
 
-        if (lock_manager::has_blocking_lock($location)) {
+        if (job_repository::has_blocking_job($location)) {
             throw new \moodle_exception('error_locked', 'filter_dixeo_imageeditor');
         }
 

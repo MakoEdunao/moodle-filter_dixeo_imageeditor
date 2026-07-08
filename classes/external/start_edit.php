@@ -22,12 +22,12 @@ use core_external\external_api;
 use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_value;
-use filter_dixeo_imageeditor\local\file_replacer;
-use filter_dixeo_imageeditor\local\lock_manager;
+use filter_dixeo_imageeditor\adapter\file_replacer;
+use local_dixeo\repository\image\job_repository;
 use local_dixeo\external\service_factory;
-use local_dixeo\local\content_image_capability;
+use local_dixeo\service\image\content\capability;
 use local_dixeo\service\image_generation_service;
-use local_dixeo\service\pluginfile_image_helper;
+use local_dixeo\service\image\pluginfile_helper;
 
 /**
  * Start a content image edit job.
@@ -92,18 +92,18 @@ final class start_edit extends external_api {
         ]);
 
         $location = self::validate_location($params);
-        content_image_capability::require_edit($location->courseid);
+        capability::require_edit($location->courseid);
 
         if (trim($params['instructions']) === '') {
             throw new \moodle_exception('instructions_required', 'filter_dixeo_imageeditor');
         }
 
-        if (lock_manager::has_blocking_lock($location)) {
+        if (job_repository::has_blocking_job($location)) {
             throw new \moodle_exception('error_locked', 'filter_dixeo_imageeditor');
         }
 
         $imageurl = $location->get_pluginfile_url();
-        $b64 = pluginfile_image_helper::image_url_to_base64($imageurl);
+        $b64 = pluginfile_helper::image_url_to_base64($imageurl);
 
         $imageservice = service_factory::get_image_generation_service();
         $result = $imageservice->submit_content_image_edit_job(

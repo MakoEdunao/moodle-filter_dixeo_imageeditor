@@ -27,10 +27,10 @@ namespace filter_dixeo_imageeditor;
 
 use context_module;
 use filter_dixeo_imageeditor\external\get_editor_context;
-use filter_dixeo_imageeditor\local\image_util;
-use filter_dixeo_imageeditor\local\location_key;
-use filter_dixeo_imageeditor\local\lock_manager;
-use local_dixeo\service\image_generation_policy;
+use filter_dixeo_imageeditor\adapter\image_util;
+use local_dixeo\service\image\content\location;
+use local_dixeo\repository\image\job_repository;
+use local_dixeo\service\image\policy;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -52,11 +52,11 @@ final class get_editor_context_test extends \advanced_testcase {
         $this->resetAfterTest(true);
         set_config('enabled', 1, 'filter_dixeo_imageeditor');
         set_config('image_generation_enabled', 1, 'local_dixeo');
-        set_config('image_generation_content_mode', image_generation_policy::MODE_GENERATE_EDIT, 'local_dixeo');
+        set_config('image_generation_content_mode', policy::MODE_GENERATE_EDIT, 'local_dixeo');
     }
 
     /**
-     * @return array{0: location_key, 1: int}
+     * @return array{0: location, 1: int}
      */
     private function create_page_image_location(): array {
         global $USER;
@@ -90,7 +90,7 @@ final class get_editor_context_test extends \advanced_testcase {
         $file = $fs->get_file($context->id, 'mod_page', 'content', 0, '/', 'embedded.png');
         $this->assertNotFalse($file);
 
-        return [location_key::from_stored_file($file), (int) $course->id];
+        return [location::from_stored_file($file), (int) $course->id];
     }
 
     public function test_get_editor_context_returns_expected_payload(): void {
@@ -122,7 +122,7 @@ final class get_editor_context_test extends \advanced_testcase {
         global $USER;
 
         [$location, $courseid] = $this->create_page_image_location();
-        lock_manager::create_lock($location, 'job-123', (int) $USER->id);
+        job_repository::create_job($location, 'job-123', (int) $USER->id);
 
         $result = get_editor_context::execute(
             $location->contextid,
@@ -135,7 +135,7 @@ final class get_editor_context_test extends \advanced_testcase {
         );
 
         $this->assertTrue($result['locked']);
-        $this->assertSame(lock_manager::STATUS_PENDING, $result['location_status']['status']);
+        $this->assertSame(job_repository::STATUS_PENDING, $result['location_status']['status']);
     }
 
     /**
@@ -143,9 +143,9 @@ final class get_editor_context_test extends \advanced_testcase {
      */
     public static function content_mode_policy_provider(): array {
         return [
-            'disabled' => [image_generation_policy::MODE_DISABLED, false, false],
-            'generate' => [image_generation_policy::MODE_GENERATE, true, false],
-            'generate_edit' => [image_generation_policy::MODE_GENERATE_EDIT, true, true],
+            'disabled' => [policy::MODE_DISABLED, false, false],
+            'generate' => [policy::MODE_GENERATE, true, false],
+            'generate_edit' => [policy::MODE_GENERATE_EDIT, true, true],
         ];
     }
 

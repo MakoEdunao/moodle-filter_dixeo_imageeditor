@@ -27,8 +27,8 @@ namespace filter_dixeo_imageeditor;
 
 use context_module;
 use filter_dixeo_imageeditor\external\get_location_status;
-use filter_dixeo_imageeditor\local\location_key;
-use filter_dixeo_imageeditor\local\lock_manager;
+use local_dixeo\service\image\content\location;
+use local_dixeo\repository\image\job_repository;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -51,7 +51,7 @@ final class get_location_status_test extends \advanced_testcase {
     }
 
     /**
-     * @return array{0: location_key, 1: int}
+     * @return array{0: location, 1: int}
      */
     private function create_page_image_location(): array {
         global $USER;
@@ -85,17 +85,17 @@ final class get_location_status_test extends \advanced_testcase {
         $file = $fs->get_file($context->id, 'mod_page', 'content', 0, '/', 'embedded.png');
         $this->assertNotFalse($file);
 
-        return [location_key::from_stored_file($file), (int) $course->id];
+        return [location::from_stored_file($file), (int) $course->id];
     }
 
     public function test_acknowledge_clears_terminal_lock(): void {
         global $USER;
 
         [$location, $courseid] = $this->create_page_image_location();
-        lock_manager::create_lock($location, 'job-123', (int) $USER->id);
-        lock_manager::update_status(
-            (int) lock_manager::get_active_lock($location)->id,
-            lock_manager::STATUS_APPLIED
+        job_repository::create_job($location, 'job-123', (int) $USER->id);
+        job_repository::update_status(
+            (int) job_repository::get_active_job_for_location($location)->id,
+            job_repository::STATUS_APPLIED
         );
 
         $status = get_location_status::execute(
@@ -109,8 +109,8 @@ final class get_location_status_test extends \advanced_testcase {
             true
         );
 
-        $this->assertSame(lock_manager::STATUS_APPLIED, $status['status']);
-        $this->assertFalse(lock_manager::has_blocking_lock($location));
-        $this->assertNull(lock_manager::get_active_lock($location));
+        $this->assertSame(job_repository::STATUS_APPLIED, $status['status']);
+        $this->assertFalse(job_repository::has_blocking_job($location));
+        $this->assertNull(job_repository::get_active_job_for_location($location));
     }
 }

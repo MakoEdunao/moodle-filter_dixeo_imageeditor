@@ -75,7 +75,7 @@ final class get_location_status extends external_api {
         ]);
 
         $location = self::validate_location($params);
-        return \filter_dixeo_imageeditor\local\lock_manager::get_location_status($location, (bool) $params['acknowledge']);
+        return \local_dixeo\repository\image\job_repository::get_location_status($location, (bool) $params['acknowledge']);
     }
 
     /**

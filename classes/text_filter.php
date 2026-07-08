@@ -18,10 +18,11 @@ namespace filter_dixeo_imageeditor;
 
 defined('MOODLE_INTERNAL') || die();
 
-use filter_dixeo_imageeditor\local\eligibility;
-use filter_dixeo_imageeditor\local\feature_gate;
-use filter_dixeo_imageeditor\local\file_replacer;
-use filter_dixeo_imageeditor\local\location_key;
+use filter_dixeo_imageeditor\adapter\eligibility;
+use filter_dixeo_imageeditor\adapter\feature_gate;
+use filter_dixeo_imageeditor\adapter\file_replacer;
+use local_dixeo\repository\image\job_repository;
+use local_dixeo\service\image\content\location;
 
 /**
  * Injects AI image edit controls on eligible embedded images.
@@ -81,6 +82,7 @@ class text_filter extends \core_filters\text_filter {
         }
 
         $modified = false;
+        $wrappersbyhash = [];
         foreach ($images as $img) {
             if (!($img instanceof \DOMElement)) {
                 continue;
@@ -95,7 +97,7 @@ class text_filter extends \core_filters\text_filter {
                 continue;
             }
 
-            $location = location_key::from_stored_file($file);
+            $location = location::from_stored_file($file);
             if ($location->courseid < 1) {
                 continue;
             }
@@ -106,7 +108,7 @@ class text_filter extends \core_filters\text_filter {
             }
 
             $contenthash = $file->get_contenthash();
-            $img->setAttribute('src', file_replacer::append_image_rev($src, $contenthash));
+            $img->setAttribute('src', file_replacer::get_current_image_url($location));
 
             $wrapper = $dom->createElement('span');
             $wrapper->setAttribute('class', 'dixeo-imageeditor-wrap');
@@ -135,11 +137,20 @@ class text_filter extends \core_filters\text_filter {
             $button->textContent = get_string('editimage', 'filter_dixeo_imageeditor');
             $wrapper->appendChild($button);
 
+            $wrappersbyhash[$location->hash()] = $wrapper;
             $modified = true;
         }
 
         if (!$modified) {
             return $text;
+        }
+
+        // Single bulk query so the client only polls images with an in-flight job.
+        $pendinghashes = job_repository::get_pending_locationhashes(array_keys($wrappersbyhash));
+        foreach ($pendinghashes as $hash) {
+            if (isset($wrappersbyhash[$hash])) {
+                $wrappersbyhash[$hash]->setAttribute('data-dixeo-pending', '1');
+            }
         }
 
         $root = $dom->getElementById('dixeo-imageeditor-root');

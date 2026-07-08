@@ -27,11 +27,11 @@ namespace filter_dixeo_imageeditor;
 
 use context_module;
 use filter_dixeo_imageeditor\external\start_edit;
-use filter_dixeo_imageeditor\local\location_key;
-use filter_dixeo_imageeditor\local\lock_manager;
+use local_dixeo\service\image\content\location;
+use local_dixeo\repository\image\job_repository;
 use local_dixeo\dto\operation_result;
 use local_dixeo\external\service_factory;
-use local_dixeo\service\image_generation_policy;
+use local_dixeo\service\image\policy;
 use local_dixeo\service\image_generation_service;
 
 defined('MOODLE_INTERNAL') || die();
@@ -54,7 +54,7 @@ final class start_edit_test extends \advanced_testcase {
         $this->resetAfterTest(true);
         set_config('enabled', 1, 'filter_dixeo_imageeditor');
         set_config('image_generation_enabled', 1, 'local_dixeo');
-        set_config('image_generation_content_mode', image_generation_policy::MODE_GENERATE_EDIT, 'local_dixeo');
+        set_config('image_generation_content_mode', policy::MODE_GENERATE_EDIT, 'local_dixeo');
     }
 
     protected function tearDown(): void {
@@ -63,7 +63,7 @@ final class start_edit_test extends \advanced_testcase {
     }
 
     /**
-     * @return array{0: location_key, 1: int}
+     * @return array{0: location, 1: int}
      */
     private function create_page_image_location(): array {
         global $USER;
@@ -97,7 +97,7 @@ final class start_edit_test extends \advanced_testcase {
         $file = $fs->get_file($context->id, 'mod_page', 'content', 0, '/', 'embedded.png');
         $this->assertNotFalse($file);
 
-        return [location_key::from_stored_file($file), (int) $course->id];
+        return [location::from_stored_file($file), (int) $course->id];
     }
 
     public function test_start_edit_rejects_empty_instructions(): void {
@@ -124,10 +124,10 @@ final class start_edit_test extends \advanced_testcase {
         global $USER;
 
         [$location, $courseid] = $this->create_page_image_location();
-        lock_manager::create_lock($location, 'existing-job', (int) $USER->id);
-        lock_manager::update_status(
-            (int) lock_manager::get_active_lock($location)->id,
-            lock_manager::STATUS_PROCESSING
+        job_repository::create_job($location, 'existing-job', (int) $USER->id);
+        job_repository::update_status(
+            (int) job_repository::get_active_job_for_location($location)->id,
+            job_repository::STATUS_PROCESSING
         );
 
         $mock = $this->createMock(image_generation_service::class);
@@ -172,7 +172,7 @@ final class start_edit_test extends \advanced_testcase {
         );
 
         $this->assertSame('remote-edit-42', $result['jobid']);
-        $this->assertSame(lock_manager::STATUS_PENDING, $result['status']);
-        $this->assertTrue(lock_manager::has_blocking_lock($location));
+        $this->assertSame(job_repository::STATUS_PENDING, $result['status']);
+        $this->assertTrue(job_repository::has_blocking_job($location));
     }
 }

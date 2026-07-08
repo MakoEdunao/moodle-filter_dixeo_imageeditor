@@ -1,0 +1,106 @@
+<?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * Language strings.
+ *
+ * @package    filter_dixeo_imageeditor
+ * @copyright  2026 Dixeo
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+defined('MOODLE_INTERNAL') || die();
+
+$string['filtername'] = 'Éditeur d\'images Dixeo';
+$string['pluginname'] = 'Éditeur d\'images Dixeo';
+$string['privacy:metadata'] = 'Le filtre éditeur d\'images Dixeo stocke les métadonnées de l\'historique des versions et les octets d\'images archivées pour les images de contenu intégrées.';
+$string['dixeo_imageeditor:edit'] = 'Modifier des images de contenu intégrées avec l\'IA';
+$string['setting_enabled'] = 'Activer l\'éditeur d\'images Dixeo';
+$string['setting_enabled_desc'] = 'Si désactivé, le filtre n\'injecte pas de contrôles d\'édition.';
+$string['editimage'] = 'Modifier l\'image';
+$string['modal_title'] = 'Éditeur d\'images Dixeo';
+$string['mode_new_image'] = 'Nouvelle image';
+$string['mode_edit_current_image'] = 'Modifier l\'actuelle';
+$string['prompt_label_generate'] = 'Décrivez l\'image que vous souhaitez que l\'IA crée';
+$string['prompt_placeholder_generate'] = 'Essayez « Paysage montagneux »';
+$string['prompt_label_edit'] = 'Décrivez les modifications à apporter à l\'image';
+$string['prompt_placeholder_edit'] = 'p. ex. Retirer l\'ordinateur portable du bureau, zoomer légèrement et conserver le même éclairage.';
+$string['prompt_required'] = 'Veuillez saisir une description avant de continuer.';
+$string['instructions_required'] = 'Veuillez décrire les modifications à appliquer.';
+$string['shape_label'] = 'Format de l\'image';
+$string['shape_landscape'] = 'Paysage';
+$string['shape_square'] = 'Carré';
+$string['shape_portrait'] = 'Portrait';
+$string['quality_label'] = 'Qualité';
+$string['quality_low'] = 'Faible';
+$string['quality_medium'] = 'Moyenne';
+$string['quality_high'] = 'Élevée';
+$string['history_label'] = 'Historique des versions';
+$string['history_set_current'] = 'Définir comme image actuelle';
+$string['history_delete'] = 'Supprimer de l\'historique';
+$string['history_actions'] = 'Actions de version';
+$string['submit_generate'] = 'Générer';
+$string['submit_edit'] = 'Modifier';
+$string['generating_status'] = 'Génération de l\'image...';
+$string['error_job_failed'] = 'Échec de la génération de l\'image. Veuillez réessayer.';
+$string['error_locked'] = 'Une tâche d\'image est déjà en cours pour cette image.';
+$string['error_not_eligible'] = 'Cette image ne peut pas être modifiée.';
+$string['error_revert_blocked'] = 'Impossible de revenir en arrière pendant qu\'une tâche est en cours.';
+$string['error_delete_blocked'] = 'Impossible de supprimer de l\'historique pendant qu\'une tâche est en cours.';
+$string['error_delete_current'] = 'Impossible de supprimer l\'entrée de l\'historique correspondant à l\'image actuelle.';
+$string['privacy:metadata:usermodified'] = 'L\'utilisateur qui a créé une entrée de l\'historique des versions.';
+$string['privacy:metadata:timecreated'] = 'Date de création de l\'entrée de l\'historique des versions.';
+$string['privacy:metadata:versiontable'] = 'Stocke les métadonnées des versions archivées d\'images pour le contenu intégré.';
+$string['privacy:metadata:filename'] = 'Nom du fichier de l\'image intégrée.';
+$string['privacy:metadata:source'] = 'Comment la version archivée a été créée.';
+$string['privacy:metadata:historyfiles'] = 'Les copies archivées des versions précédentes des images sont stockées dans le système de fichiers.';
+$string['privacy:pathversions'] = 'Historique des versions d\'image';
+$string['task_cleanup_version_history'] = 'Nettoyer l\'historique des versions d\'images Dixeo';
+$string['close'] = 'Fermer';
+$string['history_preview_title'] = 'Aperçu de la version';
+$string['history_preview_prev'] = 'Version précédente';
+$string['history_preview_next'] = 'Version suivante';
+$string['upload_image'] = 'Téléverser';
+$string['upload_replace_title'] = 'Remplacer l\'image actuelle ?';
+$string['upload_replace_body'] = 'Le fichier sélectionné remplacera l\'image actuelle. La version précédente sera enregistrée dans l\'historique des versions.';
+$string['upload_replace_confirm'] = 'Remplacer l\'image';
+$string['upload_invalid_type'] = 'Veuillez choisir un fichier image pris en charge ({$a}).';
+$string['error_upload_blocked'] = 'Impossible de téléverser pendant qu\'une tâche d\'image IA est en cours.';
+$string['error_upload_invalid_image'] = 'Le fichier téléversé n\'est pas une image prise en charge.';
+$string['manual_edit_start'] = 'Modifier l\'image manuellement';
+$string['manual_save'] = 'Enregistrer';
+$string['manual_discard'] = 'Abandonner';
+$string['manual_download'] = 'Télécharger';
+$string['manual_rotate_clockwise'] = 'Pivoter';
+$string['manual_apply_crop'] = 'Recadrer';
+$string['manual_flip_horizontal'] = 'Retourner horizontalement';
+$string['manual_flip_vertical'] = 'Retourner verticalement';
+$string['manual_zoom_in'] = 'Zoom avant';
+$string['manual_zoom_out'] = 'Zoom arrière';
+$string['manual_zoom_reset'] = 'Réinitialiser le zoom';
+$string['manual_filter_grayscale'] = 'Noir et blanc';
+$string['manual_filter_sepia'] = 'Sépia';
+$string['manual_brightness'] = 'Luminosité';
+$string['manual_contrast'] = 'Contraste';
+$string['manual_toolbar_history'] = 'Historique et export';
+$string['manual_toolbar_adjust'] = 'Ajuster l\'image';
+$string['manual_toolbar_zoom'] = 'Zoom';
+$string['manual_undo'] = 'Annuler';
+$string['manual_redo'] = 'Rétablir';
+$string['manual_unsaved_changes_title'] = 'Abandonner les modifications non enregistrées ?';
+$string['manual_unsaved_changes_body'] = 'Vous avez des modifications manuelles non enregistrées. Si vous quittez maintenant, elles seront perdues.';
+$string['error_manual_blocked'] = 'Impossible d\'enregistrer les modifications manuelles pendant qu\'une tâche d\'image IA est en cours.';
+$string['error_manual_invalid_image'] = 'L\'image modifiée n\'a pas pu être traitée.';

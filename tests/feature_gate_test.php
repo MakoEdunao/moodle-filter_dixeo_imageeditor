@@ -25,13 +25,13 @@
 
 namespace filter_dixeo_imageeditor;
 
-use filter_dixeo_imageeditor\local\feature_gate;
-use local_dixeo\service\image_generation_policy;
+use filter_dixeo_imageeditor\adapter\feature_gate;
+use local_dixeo\service\image\policy;
 
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * @covers \filter_dixeo_imageeditor\local\feature_gate
+ * @covers \filter_dixeo_imageeditor\adapter\feature_gate
  */
 final class feature_gate_test extends \advanced_testcase {
 
@@ -43,7 +43,7 @@ final class feature_gate_test extends \advanced_testcase {
     public function test_is_globally_enabled_when_filter_disabled(): void {
         set_config('enabled', 0, 'filter_dixeo_imageeditor');
         set_config('image_generation_enabled', 1, 'local_dixeo');
-        set_config('image_generation_content_mode', image_generation_policy::MODE_GENERATE_EDIT, 'local_dixeo');
+        set_config('image_generation_content_mode', policy::MODE_GENERATE_EDIT, 'local_dixeo');
 
         $this->assertFalse(feature_gate::is_globally_enabled());
     }
@@ -51,7 +51,7 @@ final class feature_gate_test extends \advanced_testcase {
     public function test_is_globally_enabled_when_content_mode_disabled(): void {
         set_config('enabled', 1, 'filter_dixeo_imageeditor');
         set_config('image_generation_enabled', 1, 'local_dixeo');
-        set_config('image_generation_content_mode', image_generation_policy::MODE_DISABLED, 'local_dixeo');
+        set_config('image_generation_content_mode', policy::MODE_DISABLED, 'local_dixeo');
 
         $this->assertTrue(feature_gate::is_globally_enabled());
     }
@@ -59,7 +59,7 @@ final class feature_gate_test extends \advanced_testcase {
     public function test_is_globally_enabled_when_global_dixeo_image_off(): void {
         set_config('enabled', 1, 'filter_dixeo_imageeditor');
         set_config('image_generation_enabled', 0, 'local_dixeo');
-        set_config('image_generation_content_mode', image_generation_policy::MODE_DISABLED, 'local_dixeo');
+        set_config('image_generation_content_mode', policy::MODE_DISABLED, 'local_dixeo');
 
         $this->assertTrue(feature_gate::is_globally_enabled());
     }

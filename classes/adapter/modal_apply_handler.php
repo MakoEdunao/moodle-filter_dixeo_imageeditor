@@ -14,20 +14,35 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle. If not, see <http://www.gnu.org/licenses/>.
 
+namespace filter_dixeo_imageeditor\adapter;
+
+defined('MOODLE_INTERNAL') || die();
+
+use local_dixeo\service\image\content\apply_handler;
+use local_dixeo\service\image\content\location;
+
 /**
- * Plugin version and other meta-data are defined here.
+ * Applies modal poll results via file_replacer (version history).
  *
  * @package    filter_dixeo_imageeditor
  * @copyright  2026 Dixeo
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+final class modal_apply_handler implements apply_handler {
 
-defined('MOODLE_INTERNAL') || die();
-
-$plugin->component = 'filter_dixeo_imageeditor';
-$plugin->version = 2026070601;
-$plugin->requires = 2024100100;
-$plugin->dependencies = [
-    'local_dixeo' => 2026070600,
-];
-$plugin->maturity = MATURITY_BETA;
+    /**
+     * @param location $location
+     * @param array $jobresult
+     * @param int $userid
+     * @param string $source
+     * @return void
+     */
+    public function apply_job_result(
+        location $location,
+        array $jobresult,
+        int $userid,
+        string $source
+    ): void {
+        file_replacer::apply_job_result($location, $jobresult, $userid, $source);
+    }
+}

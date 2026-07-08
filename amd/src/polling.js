@@ -31,7 +31,7 @@ define([
 
     const GENERATING_CLASS = 'is-generating';
     const POLL_INTERVAL_MS = 4000;
-    /** Align with lock_manager::TIMEOUT_SECONDS (1 hour). */
+    /** Align with job_repository::TIMEOUT_SECONDS (1 hour). */
     const POLL_TIMEOUT_MS = 3600000;
 
     /** @type {Map<string, number>} */
@@ -122,7 +122,9 @@ define([
                     Ajax.call([{
                         methodname: 'filter_dixeo_imageeditor_get_location_status',
                         args: Object.assign({}, imageSync.getLocationArgs(wrap), {acknowledge: true}),
-                    }]);
+                    }])[0].catch(() => {
+                        // Acknowledge is best-effort cleanup.
+                    });
                     return;
                 }
 
@@ -139,7 +141,9 @@ define([
                     Ajax.call([{
                         methodname: 'filter_dixeo_imageeditor_get_location_status',
                         args: Object.assign({}, imageSync.getLocationArgs(wrap), {acknowledge: true}),
-                    }]);
+                    }])[0].catch(() => {
+                        // Acknowledge is best-effort cleanup.
+                    });
                 }
             }).catch(Notification.exception);
         };
@@ -151,11 +155,17 @@ define([
     /**
      * Resume overlays for in-flight jobs after page load.
      *
+     * Only wrappers flagged server-side (data-dixeo-pending="1") are checked, so
+     * pages full of idle images make no status requests at all.
+     *
      * @param {string} wrapSelector
      */
     const resumePendingOverlays = (wrapSelector) => {
         document.querySelectorAll(wrapSelector).forEach((wrap) => {
             if (!(wrap instanceof HTMLElement)) {
+                return;
+            }
+            if (wrap.dataset.dixeoPending !== '1') {
                 return;
             }
             Ajax.call([{

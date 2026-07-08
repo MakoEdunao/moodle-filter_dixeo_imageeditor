@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle. If not, see <http://www.gnu.org/licenses/>.
 
-namespace filter_dixeo_imageeditor\local;
+namespace filter_dixeo_imageeditor\adapter;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -47,10 +47,15 @@ final class image_util {
     /**
      * HTML file input accept attribute for Moodle web_image types.
      *
+     * SVG is excluded: it can embed scripts and the capability is not RISK_XSS.
+     *
      * @return string
      */
     public static function get_web_image_accept_attribute(): string {
         $extensions = file_get_typegroup('extension', 'web_image');
+        $extensions = array_filter($extensions, static function(string $extension): bool {
+            return stripos($extension, 'svg') === false;
+        });
         return implode(',', $extensions);
     }
 
@@ -82,8 +87,10 @@ final class image_util {
             throw new \moodle_exception($errorstring, 'filter_dixeo_imageeditor');
         }
 
+        // SVG can embed scripts and is served inline; the edit capability only
+        // declares RISK_SPAM, so reject it as a stored-XSS vector.
         if ($mimetype === 'image/svg+xml') {
-            return;
+            throw new \moodle_exception($errorstring, 'filter_dixeo_imageeditor');
         }
 
         if (@getimagesizefromstring($binary) === false) {

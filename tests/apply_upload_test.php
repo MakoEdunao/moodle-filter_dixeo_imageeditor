@@ -27,9 +27,9 @@ namespace filter_dixeo_imageeditor;
 
 use context_module;
 use filter_dixeo_imageeditor\external\apply_upload;
-use filter_dixeo_imageeditor\local\file_replacer;
-use filter_dixeo_imageeditor\local\location_key;
-use filter_dixeo_imageeditor\local\lock_manager;
+use filter_dixeo_imageeditor\adapter\file_replacer;
+use local_dixeo\service\image\content\location;
+use local_dixeo\repository\image\job_repository;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -57,7 +57,7 @@ final class apply_upload_test extends \advanced_testcase {
     }
 
     /**
-     * @return array{0: location_key, 1: int}
+     * @return array{0: location, 1: int}
      */
     private function create_page_image_location(): array {
         global $USER;
@@ -91,7 +91,7 @@ final class apply_upload_test extends \advanced_testcase {
         $file = $fs->get_file($context->id, 'mod_page', 'content', 0, '/', 'embedded.png');
         $this->assertNotFalse($file);
 
-        return [location_key::from_stored_file($file), (int) $course->id];
+        return [location::from_stored_file($file), (int) $course->id];
     }
 
     public function test_apply_upload_replaces_file_and_archives(): void {
@@ -167,10 +167,10 @@ final class apply_upload_test extends \advanced_testcase {
         global $USER;
 
         [$location, $courseid] = $this->create_page_image_location();
-        lock_manager::create_lock($location, 'job-locked', (int) $USER->id);
-        lock_manager::update_status(
-            (int) lock_manager::get_active_lock($location)->id,
-            lock_manager::STATUS_PROCESSING
+        job_repository::create_job($location, 'job-locked', (int) $USER->id);
+        job_repository::update_status(
+            (int) job_repository::get_active_job_for_location($location)->id,
+            job_repository::STATUS_PROCESSING
         );
 
         try {

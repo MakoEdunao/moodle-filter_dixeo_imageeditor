@@ -25,12 +25,12 @@
 
 namespace filter_dixeo_imageeditor;
 
-use filter_dixeo_imageeditor\local\eligibility;
+use filter_dixeo_imageeditor\adapter\eligibility;
 
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * @covers \filter_dixeo_imageeditor\local\eligibility
+ * @covers \filter_dixeo_imageeditor\adapter\eligibility
  */
 final class eligibility_test extends \advanced_testcase {
 

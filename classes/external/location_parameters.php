@@ -22,11 +22,13 @@ use core_external\external_function_parameters;
 use core_external\external_multiple_structure;
 use core_external\external_single_structure;
 use core_external\external_value;
-use filter_dixeo_imageeditor\local\eligibility;
-use filter_dixeo_imageeditor\local\feature_gate;
-use filter_dixeo_imageeditor\local\file_replacer;
-use filter_dixeo_imageeditor\local\location_key;
-use filter_dixeo_imageeditor\local\lock_manager;
+use filter_dixeo_imageeditor\adapter\eligibility;
+use filter_dixeo_imageeditor\adapter\feature_gate;
+use filter_dixeo_imageeditor\adapter\file_replacer;
+use local_dixeo\repository\image\job_repository;
+use local_dixeo\service\image\job_orchestrator;
+use local_dixeo\service\image\content\location;
+use local_dixeo\service\image\content_target;
 
 /**
  * Shared validation for filter externals.
@@ -53,24 +55,30 @@ trait location_parameters {
     }
 
     /**
+     * Validate the file coordinates and authorise the user against the file's own course.
+     *
+     * The course id is derived server-side from the stored file's context; the client
+     * supplied courseid is never used for authorisation.
+     *
      * @param array $params
-     * @return location_key
+     * @return location
      */
-    protected static function validate_location(array $params): location_key {
+    protected static function validate_location(array $params): location {
         $definition = self::location_parameters_definition();
         $params = self::validate_parameters($definition, array_intersect_key($params, $definition->keys));
-        $location = location_key::from_params($params);
 
-        if ($location->courseid < 1) {
-            throw new \invalid_parameter_exception('Invalid course id');
-        }
-
-        feature_gate::require_filter_edit($location->courseid);
-
-        $file = $location->get_stored_file();
+        $file = location::from_params($params)->get_stored_file();
         if (!$file || !eligibility::is_eligible_stored_file($file)) {
             throw new \moodle_exception('error_not_eligible', 'filter_dixeo_imageeditor');
         }
+
+        $location = location::from_stored_file($file);
+        if ($location->courseid < 1) {
+            throw new \moodle_exception('error_not_eligible', 'filter_dixeo_imageeditor');
+        }
+
+        self::validate_context(\context_course::instance($location->courseid));
+        feature_gate::require_filter_edit($location->courseid);
 
         return $location;
     }
@@ -78,10 +86,10 @@ trait location_parameters {
     /**
      * Standard response after an in-place image replacement.
      *
-     * @param location_key $location
+     * @param location $location
      * @return array<string, mixed>
      */
-    protected static function image_apply_returns(location_key $location): array {
+    protected static function image_apply_returns(location $location): array {
         return [
             'imageurl' => file_replacer::get_current_image_url($location),
             'current_contenthash' => file_replacer::get_current_contenthash($location),
@@ -92,14 +100,14 @@ trait location_parameters {
     /**
      * Queue lock and adhoc poll task after a remote job was accepted.
      *
-     * @param location_key $location
+     * @param location $location
      * @param string $jobid
      * @param int $userid
      * @param string $source
      * @return array{jobid: string, status: string}
      */
     protected static function queue_content_image_job(
-        location_key $location,
+        location $location,
         string $jobid,
         int $userid,
         string $source,
@@ -107,10 +115,25 @@ trait location_parameters {
         ?string $quality = null,
         ?string $mode = null
     ): array {
-        lock_manager::create_lock($location, $jobid, $userid, $prompt, $quality, $mode);
-        lock_manager::queue_poll_task($location, $jobid, $userid, 0, $source);
+        job_orchestrator::submit_and_queue(
+            content_target::from_location($location),
+            $jobid,
+            $userid,
+            [
+                'placeholderid' => null,
+                'targettable' => null,
+                'targetfield' => null,
+                'targetid' => null,
+                'cmid' => null,
+                'origin' => job_repository::ORIGIN_MODAL,
+                'prompt' => $prompt,
+                'quality' => $quality,
+                'mode' => $mode,
+            ],
+            $source
+        );
 
-        return ['jobid' => $jobid, 'status' => lock_manager::STATUS_PENDING];
+        return ['jobid' => $jobid, 'status' => job_repository::STATUS_PENDING];
     }
 
     /**

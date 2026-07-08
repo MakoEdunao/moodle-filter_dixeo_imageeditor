@@ -26,8 +26,8 @@
 namespace filter_dixeo_imageeditor;
 
 use context_module;
-use filter_dixeo_imageeditor\local\file_replacer;
-use filter_dixeo_imageeditor\local\location_key;
+use filter_dixeo_imageeditor\adapter\file_replacer;
+use local_dixeo\service\image\content\location;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -35,7 +35,7 @@ global $CFG;
 require_once($CFG->dirroot . '/mod/page/lib.php');
 
 /**
- * @covers \filter_dixeo_imageeditor\local\file_replacer
+ * @covers \filter_dixeo_imageeditor\adapter\file_replacer
  */
 final class file_replacer_test extends \advanced_testcase {
 
@@ -55,7 +55,7 @@ final class file_replacer_test extends \advanced_testcase {
     }
 
     /**
-     * @return array{0: location_key, 1: int}
+     * @return array{0: location, 1: int}
      */
     private function create_page_image_location(): array {
         global $USER;
@@ -89,7 +89,7 @@ final class file_replacer_test extends \advanced_testcase {
         $file = $fs->get_file($context->id, 'mod_page', 'content', 0, '/', 'embedded.png');
         $this->assertNotFalse($file);
 
-        return [location_key::from_stored_file($file), (int) $course->id];
+        return [location::from_stored_file($file), (int) $course->id];
     }
 
     public function test_apply_binary_archives_before_replace(): void {

@@ -25,12 +25,12 @@
 
 namespace filter_dixeo_imageeditor;
 
-use filter_dixeo_imageeditor\local\image_util;
+use filter_dixeo_imageeditor\adapter\image_util;
 
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * @covers \filter_dixeo_imageeditor\local\image_util
+ * @covers \filter_dixeo_imageeditor\adapter\image_util
  */
 final class image_util_test extends \advanced_testcase {
 
@@ -65,9 +65,20 @@ final class image_util_test extends \advanced_testcase {
         image_util::assert_valid_web_image(self::fixture_jpeg_bytes(), $this->courseid);
     }
 
-    public function test_assert_valid_web_image_accepts_svg(): void {
+    public function test_assert_valid_web_image_rejects_svg(): void {
         $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect width="10" height="10"/></svg>';
-        image_util::assert_valid_web_image($svg, $this->courseid);
+        try {
+            image_util::assert_valid_web_image($svg, $this->courseid);
+            $this->fail('Expected moodle_exception');
+        } catch (\moodle_exception $e) {
+            $this->assertSame('error_upload_invalid_image', $e->errorcode);
+        }
+    }
+
+    public function test_accept_attribute_excludes_svg(): void {
+        $accept = image_util::get_web_image_accept_attribute();
+        $this->assertNotEmpty($accept);
+        $this->assertStringNotContainsStringIgnoringCase('svg', $accept);
     }
 
     public function test_assert_valid_web_image_rejects_empty_payload(): void {

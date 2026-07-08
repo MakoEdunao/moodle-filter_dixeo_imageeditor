@@ -62,6 +62,8 @@ class provider implements
             'privacy:metadata:versiontable'
         );
 
+        $collection->add_subsystem_link('core_files', [], 'privacy:metadata:historyfiles');
+
         return $collection;
     }
 
@@ -139,19 +141,17 @@ class provider implements
     public static function delete_data_for_all_users_in_context(\context $context): void {
         global $DB;
 
-        $DB->delete_records('filter_dixeo_imageeditor_version', ['contextid' => $context->id]);
+        self::delete_versions(['contextid' => $context->id]);
     }
 
     /**
      * @param approved_contextlist $contextlist
      */
     public static function delete_data_for_user(approved_contextlist $contextlist): void {
-        global $DB;
-
         $userid = $contextlist->get_user()->id;
 
         foreach ($contextlist as $context) {
-            $DB->delete_records('filter_dixeo_imageeditor_version', [
+            self::delete_versions([
                 'contextid' => $context->id,
                 'usermodified' => $userid,
             ]);
@@ -162,15 +162,39 @@ class provider implements
      * @param approved_userlist $userlist
      */
     public static function delete_data_for_users(approved_userlist $userlist): void {
-        global $DB;
-
         $context = $userlist->get_context();
 
         foreach ($userlist->get_userids() as $userid) {
-            $DB->delete_records('filter_dixeo_imageeditor_version', [
+            self::delete_versions([
                 'contextid' => $context->id,
                 'usermodified' => $userid,
             ]);
         }
+    }
+
+    /**
+     * Delete version rows and their archived history files.
+     *
+     * @param array $conditions filter_dixeo_imageeditor_version conditions.
+     */
+    private static function delete_versions(array $conditions): void {
+        global $DB;
+
+        $versionids = $DB->get_fieldset_select(
+            'filter_dixeo_imageeditor_version',
+            'id',
+            implode(' AND ', array_map(static fn(string $field): string => "$field = :$field", array_keys($conditions))),
+            $conditions
+        );
+
+        if ($versionids) {
+            $fs = get_file_storage();
+            $systemcontextid = \context_system::instance()->id;
+            foreach ($versionids as $versionid) {
+                $fs->delete_area_files($systemcontextid, 'filter_dixeo_imageeditor', 'history', (int) $versionid);
+            }
+        }
+
+        $DB->delete_records('filter_dixeo_imageeditor_version', $conditions);
     }
 }

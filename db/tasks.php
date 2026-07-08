@@ -12,18 +12,26 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Renamed classes for filter_dixeo_imageeditor.
+ * Scheduled task definitions for filter_dixeo_imageeditor.
  *
- * @package   filter_dixeo_imageeditor
- * @copyright 2026 Dixeo
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    filter_dixeo_imageeditor
+ * @copyright  2026 Dixeo
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$renamedclasses = [
-    'filter_dixeo_imageeditor' => \filter_dixeo_imageeditor\text_filter::class,
+$tasks = [
+    [
+        'classname' => 'filter_dixeo_imageeditor\task\cleanup_version_history',
+        'blocking' => 0,
+        'minute' => 'R',
+        'hour' => 'R',
+        'day' => '*',
+        'month' => '*',
+        'dayofweek' => '*',
+    ],
 ];

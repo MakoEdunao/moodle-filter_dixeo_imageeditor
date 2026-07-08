@@ -14,14 +14,17 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle. If not, see <http://www.gnu.org/licenses/>.
 
-namespace filter_dixeo_imageeditor\local;
+namespace filter_dixeo_imageeditor\adapter;
 
 defined('MOODLE_INTERNAL') || die();
 
-use local_dixeo\service\image_generation_policy;
+use local_dixeo\service\image\policy;
 
 /**
  * Feature gate checks for the filter and its externals.
+ *
+ * Combines filter enabled config, {@see \local_dixeo\service\image\policy} modes, and Moodle caps
+ * for editor UI (see also {@see \local_dixeo\service\image\content\capability} on externals).
  *
  * @package    filter_dixeo_imageeditor
  * @copyright  2026 Dixeo
@@ -53,13 +56,13 @@ final class feature_gate {
      */
     public static function policy_flags(): array {
         return [
-            'can_generate' => image_generation_policy::is_enabled(
-                image_generation_policy::ENTITY_CONTENT,
-                image_generation_policy::ACTION_GENERATE
+            'can_generate' => policy::is_enabled(
+                policy::ENTITY_CONTENT,
+                policy::ACTION_GENERATE
             ),
-            'can_edit' => image_generation_policy::is_enabled(
-                image_generation_policy::ENTITY_CONTENT,
-                image_generation_policy::ACTION_EDIT
+            'can_edit' => policy::is_enabled(
+                policy::ENTITY_CONTENT,
+                policy::ACTION_EDIT
             ),
         ];
     }

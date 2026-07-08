@@ -22,8 +22,8 @@ use core_external\external_api;
 use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_value;
-use filter_dixeo_imageeditor\local\file_replacer;
-use filter_dixeo_imageeditor\local\lock_manager;
+use filter_dixeo_imageeditor\adapter\file_replacer;
+use local_dixeo\repository\image\job_repository;
 
 /**
  * Delete one archived version from history.
@@ -79,7 +79,7 @@ final class delete_version extends external_api {
 
         $location = self::validate_location($params);
 
-        if (lock_manager::has_blocking_lock($location)) {
+        if (job_repository::has_blocking_job($location)) {
             throw new \moodle_exception('error_delete_blocked', 'filter_dixeo_imageeditor');
         }
 
