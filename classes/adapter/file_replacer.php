@@ -18,6 +18,8 @@ namespace filter_dixeo_imageeditor\adapter;
 
 use local_dixeo\service\image\content\location;
 use local_dixeo\service\image\result_helper;
+use filter_dixeo_imageeditor\event\content_image_updated;
+use filter_dixeo_imageeditor\event\content_image_version_deleted;
 
 /**
  * Archives versions and performs in-place file replacement.
@@ -51,7 +53,11 @@ final class file_replacer {
     public static function get_history_for_location(location $location): array {
         global $DB;
 
-        $records = $DB->get_records('filter_dixeo_imageeditor_version', ['locationhash' => $location->hash()], 'timecreated DESC, id DESC');
+        $records = $DB->get_records(
+            'filter_dixeo_imageeditor_version',
+            ['locationhash' => $location->hash()],
+            'timecreated DESC, id DESC'
+        );
         $history = [];
         foreach ($records as $record) {
             $history[] = self::format_version_record($record, $location);
@@ -136,9 +142,10 @@ final class file_replacer {
      *
      * @param int $versionid
      * @param location $location
+     * @param int $userid
      * @return void
      */
-    public static function delete_version(int $versionid, location $location): void {
+    public static function delete_version(int $versionid, location $location, int $userid): void {
         global $DB;
 
         $version = $DB->get_record('filter_dixeo_imageeditor_version', ['id' => $versionid], '*', MUST_EXIST);
@@ -166,6 +173,8 @@ final class file_replacer {
         }
 
         $DB->delete_records('filter_dixeo_imageeditor_version', ['id' => $versionid]);
+
+        content_image_version_deleted::create_from_location($location, $userid, $versionid)->trigger();
     }
 
     /**
@@ -257,6 +266,8 @@ final class file_replacer {
 
         self::archive_current($location, $source, $userid);
         self::replace_file_content($file, $binary, $userid);
+
+        content_image_updated::create_from_location($location, $userid, $source)->trigger();
     }
 
     /**
@@ -304,6 +315,8 @@ final class file_replacer {
 
         self::replace_file_content($target, $historyfile->get_content(), $userid);
 
+        content_image_updated::create_from_location($location, $userid, self::SOURCE_REVERTED)->trigger();
+
         return self::get_current_image_url($location);
     }
 
@@ -335,11 +348,12 @@ final class file_replacer {
         global $DB;
 
         $fs = get_file_storage();
+        $usercontext = \context_user::instance($userid);
         $draftrecord = [
-            'contextid' => $file->get_contextid(),
+            'contextid' => $usercontext->id,
             'component' => 'user',
             'filearea' => 'draft',
-            'itemid' => file_get_unused_draft_itemid(),
+            'itemid' => self::allocate_draft_itemid($userid),
             'filepath' => '/',
             'filename' => 'dixeo-replace-' . time() . '.bin',
             'userid' => $userid,
@@ -355,6 +369,31 @@ final class file_replacer {
     }
 
     /**
+     * Allocate a draft item id without calling file_get_unused_draft_itemid().
+     *
+     * That helper requires an active web session (require_login), which breaks
+     * image apply during adhoc polling and other non-interactive contexts.
+     *
+     * @param int $userid
+     * @return int
+     */
+    private static function allocate_draft_itemid(int $userid): int {
+        $fs = get_file_storage();
+        $context = \context_user::instance($userid);
+
+        for ($attempt = 0; $attempt < 20; $attempt++) {
+            $draftitemid = random_int(100000, 999999999);
+            if (!$fs->file_exists($context->id, 'user', 'draft', $draftitemid, '/', '.')) {
+                return $draftitemid;
+            }
+        }
+
+        throw new \moodle_exception('error_job_failed', 'filter_dixeo_imageeditor');
+    }
+
+    /**
+     * Detect mimetype from binary content or filename.
+     *
      * @param string $binary
      * @param string $filename
      * @return string

@@ -22,6 +22,7 @@ use core_external\external_single_structure;
 use core_external\external_value;
 use filter_dixeo_imageeditor\adapter\feature_gate;
 use filter_dixeo_imageeditor\adapter\file_replacer;
+use filter_dixeo_imageeditor\event\content_image_job_started;
 use local_dixeo\dto\job_binding_metadata;
 use local_dixeo\repository\image\job_repository;
 use local_dixeo\external\service_factory;
@@ -128,12 +129,16 @@ final class start_edit extends external_api {
             throw new \moodle_exception('dixeo_image_job_empty_result', 'local_dixeo');
         }
 
-        return self::queue_content_image_job(
+        $queued = self::queue_content_image_job(
             $location,
             $jobid,
             (int) $USER->id,
             file_replacer::SOURCE_EDITED
         );
+
+        content_image_job_started::create_from_location($location, (int) $USER->id, $jobid, 'edit')->trigger();
+
+        return $queued;
     }
 
     /**
