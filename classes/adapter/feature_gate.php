@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is part of Moodle - https://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -12,11 +12,9 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 namespace filter_dixeo_imageeditor\adapter;
-
-defined('MOODLE_INTERNAL') || die();
 
 use local_dixeo\service\image\policy;
 
@@ -42,6 +40,8 @@ final class feature_gate {
     }
 
     /**
+     * Require the filter edit capability in a course.
+     *
      * @param int $courseid
      * @return void
      */
@@ -68,6 +68,8 @@ final class feature_gate {
     }
 
     /**
+     * Return generate and edit capability flags for a course.
+     *
      * @param int $courseid
      * @return array{can_generate: bool, can_edit: bool}
      */

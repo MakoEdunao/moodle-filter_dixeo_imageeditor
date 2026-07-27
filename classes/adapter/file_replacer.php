@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is part of Moodle - https://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -12,11 +12,9 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 namespace filter_dixeo_imageeditor\adapter;
-
-defined('MOODLE_INTERNAL') || die();
 
 use local_dixeo\service\image\content\location;
 use local_dixeo\service\image\result_helper;
@@ -33,13 +31,20 @@ final class file_replacer {
     /** @var string File area for archived version blobs in filter storage. */
     public const FILEAREA_HISTORY = 'history';
 
+    /** @var string Archived version created by AI generation. */
     public const SOURCE_GENERATED = 'generated';
+    /** @var string Archived version created by AI edit. */
     public const SOURCE_EDITED = 'edited';
+    /** @var string Archived version created by revert. */
     public const SOURCE_REVERTED = 'reverted';
+    /** @var string Archived version created by manual edit. */
     public const SOURCE_MANUAL = 'manual';
+    /** @var string Archived version created by upload. */
     public const SOURCE_UPLOAD = 'uploaded';
 
     /**
+     * Return version history rows for a content image location.
+     *
      * @param location $location
      * @return array<int, array<string, mixed>>
      */
@@ -55,6 +60,8 @@ final class file_replacer {
     }
 
     /**
+     * Format a version database record for API output.
+     *
      * @param \stdClass $record
      * @param location $location
      * @return array<string, mixed>
@@ -82,6 +89,8 @@ final class file_replacer {
     }
 
     /**
+     * Return the current stored file contenthash for a location.
+     *
      * @param location $location
      * @return string
      */
@@ -123,6 +132,8 @@ final class file_replacer {
     }
 
     /**
+     * Delete one archived version from history.
+     *
      * @param int $versionid
      * @param location $location
      * @return void
@@ -158,6 +169,8 @@ final class file_replacer {
     }
 
     /**
+     * Archive the current file bytes into version history.
+     *
      * @param location $location
      * @param string $source
      * @param int $userid
@@ -206,6 +219,8 @@ final class file_replacer {
     }
 
     /**
+     * Apply a completed AI job result to the stored file.
+     *
      * @param location $location
      * @param array $jobresult
      * @param int $userid
@@ -226,6 +241,8 @@ final class file_replacer {
     }
 
     /**
+     * Replace stored file content with new image bytes.
+     *
      * @param location $location
      * @param string $binary
      * @param int $userid
@@ -243,6 +260,8 @@ final class file_replacer {
     }
 
     /**
+     * Revert the stored file to a historical version.
+     *
      * @param location $location
      * @param int $versionid
      * @param int $userid
@@ -305,6 +324,8 @@ final class file_replacer {
     }
 
     /**
+     * Replace stored file content using a draft area temp file.
+     *
      * @param \stored_file $file
      * @param string $binary
      * @param int $userid
@@ -348,6 +369,8 @@ final class file_replacer {
     }
 
     /**
+     * Return the file path for archived history blobs.
+     *
      * @param location $location
      * @return string
      */
@@ -356,6 +379,8 @@ final class file_replacer {
     }
 
     /**
+     * Return the filename for an archived history blob.
+     *
      * @param \stdClass $record
      * @return string
      */

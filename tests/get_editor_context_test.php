@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is part of Moodle - https://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -12,7 +12,7 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
  * Tests for get_editor_context external.
@@ -38,10 +38,15 @@ global $CFG;
 require_once($CFG->dirroot . '/mod/page/lib.php');
 
 /**
+ * Tests for the get_editor_context external function.
+ *
  * @covers \filter_dixeo_imageeditor\external\get_editor_context
  */
 final class get_editor_context_test extends \advanced_testcase {
 
+    /**
+     * Return PNG bytes from core filestorage fixtures.
+     */
     private static function fixture_png_bytes(): string {
         global $CFG;
         return (string) file_get_contents($CFG->dirroot . '/lib/filestorage/tests/fixtures/testimage.png');
@@ -56,6 +61,8 @@ final class get_editor_context_test extends \advanced_testcase {
     }
 
     /**
+     * Create a page module with an embedded PNG for tests.
+     *
      * @return array{0: location, 1: int}
      */
     private function create_page_image_location(): array {
@@ -139,6 +146,8 @@ final class get_editor_context_test extends \advanced_testcase {
     }
 
     /**
+     * Data provider for content mode policy flag tests.
+     *
      * @return array<string, array{0: string, 1: bool, 2: bool}>
      */
     public static function content_mode_policy_provider(): array {
@@ -150,6 +159,8 @@ final class get_editor_context_test extends \advanced_testcase {
     }
 
     /**
+     * Test editor context policy flags per content mode.
+     *
      * @param string $mode
      * @param bool $expectgenerate
      * @param bool $expectedit

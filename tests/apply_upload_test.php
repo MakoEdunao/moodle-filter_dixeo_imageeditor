@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is part of Moodle - https://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -12,7 +12,7 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
  * Tests for apply_upload external.
@@ -37,15 +37,23 @@ global $CFG;
 require_once($CFG->dirroot . '/mod/page/lib.php');
 
 /**
+ * Tests for the apply_upload external function.
+ *
  * @covers \filter_dixeo_imageeditor\external\apply_upload
  */
 final class apply_upload_test extends \advanced_testcase {
 
+    /**
+     * Return PNG bytes from core filestorage fixtures.
+     */
     private static function fixture_png_bytes(): string {
         global $CFG;
         return (string) file_get_contents($CFG->dirroot . '/lib/filestorage/tests/fixtures/testimage.png');
     }
 
+    /**
+     * Return JPEG bytes from core filestorage fixtures.
+     */
     private static function fixture_jpeg_bytes(): string {
         global $CFG;
         return (string) file_get_contents($CFG->dirroot . '/lib/filestorage/tests/fixtures/testimage.jpg');
@@ -57,6 +65,8 @@ final class apply_upload_test extends \advanced_testcase {
     }
 
     /**
+     * Create a page module with an embedded PNG for tests.
+     *
      * @return array{0: location, 1: int}
      */
     private function create_page_image_location(): array {

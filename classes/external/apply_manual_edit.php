@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is part of Moodle - https://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -12,11 +12,9 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 namespace filter_dixeo_imageeditor\external;
-
-defined('MOODLE_INTERNAL') || die();
 
 use core_external\external_api;
 use core_external\external_function_parameters;
@@ -37,6 +35,8 @@ final class apply_manual_edit extends external_api {
     use location_parameters;
 
     /**
+     * Returns description of method parameters.
+     *
      * @return external_function_parameters
      */
     public static function execute_parameters(): external_function_parameters {
@@ -47,6 +47,8 @@ final class apply_manual_edit extends external_api {
     }
 
     /**
+     * Execute the apply_manual_edit web service.
+     *
      * @param int $contextid
      * @param string $component
      * @param string $filearea
@@ -95,6 +97,8 @@ final class apply_manual_edit extends external_api {
     }
 
     /**
+     * Returns description of method results.
+     *
      * @return external_single_structure
      */
     public static function execute_returns(): external_single_structure {

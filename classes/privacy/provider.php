@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is part of Moodle - https://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -12,7 +12,7 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
  * Privacy API implementation for filter_dixeo_imageeditor.
@@ -32,8 +32,6 @@ use core_privacy\local\request\transform;
 use core_privacy\local\request\userlist;
 use core_privacy\local\request\writer;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Privacy provider for version history metadata.
  *
@@ -47,6 +45,8 @@ class provider implements
         \core_privacy\local\request\plugin\provider {
 
     /**
+     * Describe stored metadata for the privacy API.
+     *
      * @param collection $collection
      * @return collection
      */
@@ -68,6 +68,8 @@ class provider implements
     }
 
     /**
+     * Return contexts containing user version history data.
+     *
      * @param int $userid
      * @return contextlist
      */
@@ -89,6 +91,8 @@ class provider implements
     }
 
     /**
+     * Populate the userlist for a context.
+     *
      * @param userlist $userlist
      */
     public static function get_users_in_context(userlist $userlist): void {
@@ -105,6 +109,8 @@ class provider implements
     }
 
     /**
+     * Export version history data for approved contexts.
+     *
      * @param approved_contextlist $contextlist
      */
     public static function export_user_data(approved_contextlist $contextlist): void {
@@ -136,6 +142,8 @@ class provider implements
     }
 
     /**
+     * Delete all version history data in a context.
+     *
      * @param \context $context
      */
     public static function delete_data_for_all_users_in_context(\context $context): void {
@@ -145,6 +153,8 @@ class provider implements
     }
 
     /**
+     * Delete version history data for approved contexts.
+     *
      * @param approved_contextlist $contextlist
      */
     public static function delete_data_for_user(approved_contextlist $contextlist): void {
@@ -159,6 +169,8 @@ class provider implements
     }
 
     /**
+     * Delete version history data for approved users.
+     *
      * @param approved_userlist $userlist
      */
     public static function delete_data_for_users(approved_userlist $userlist): void {

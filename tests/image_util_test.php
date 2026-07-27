@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is part of Moodle - https://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -12,7 +12,7 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
  * Tests for image_util helpers.
@@ -27,9 +27,9 @@ namespace filter_dixeo_imageeditor;
 
 use filter_dixeo_imageeditor\adapter\image_util;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
+ * Tests for image_util helpers.
+ *
  * @covers \filter_dixeo_imageeditor\adapter\image_util
  */
 final class image_util_test extends \advanced_testcase {
@@ -37,11 +37,17 @@ final class image_util_test extends \advanced_testcase {
     /** @var int */
     private int $courseid;
 
+    /**
+     * Return PNG bytes from core filestorage fixtures.
+     */
     private static function fixture_png_bytes(): string {
         global $CFG;
         return (string) file_get_contents($CFG->dirroot . '/lib/filestorage/tests/fixtures/testimage.png');
     }
 
+    /**
+     * Return JPEG bytes from core filestorage fixtures.
+     */
     private static function fixture_jpeg_bytes(): string {
         global $CFG;
         return (string) file_get_contents($CFG->dirroot . '/lib/filestorage/tests/fixtures/testimage.jpg');

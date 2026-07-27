@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is part of Moodle - https://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -12,11 +12,9 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 namespace filter_dixeo_imageeditor\adapter;
-
-defined('MOODLE_INTERNAL') || die();
 
 /**
  * Determines whether a stored file is eligible for AI editing.
@@ -28,6 +26,8 @@ defined('MOODLE_INTERNAL') || die();
 final class eligibility {
 
     /**
+     * Whether a stored file is eligible for Dixeo editing.
+     *
      * @param \stored_file $file
      * @return bool
      */
@@ -59,6 +59,8 @@ final class eligibility {
     }
 
     /**
+     * Resolve an eligible stored file from a pluginfile URL.
+     *
      * @param string $imageurl
      * @return \stored_file|null
      */
@@ -71,6 +73,8 @@ final class eligibility {
     }
 
     /**
+     * Whether the component and file area pair is denied.
+     *
      * @param string $component
      * @param string $filearea
      * @return bool True when the file must be excluded.
