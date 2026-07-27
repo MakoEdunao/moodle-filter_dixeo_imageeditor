@@ -64,6 +64,15 @@ class provider implements
 
         $collection->add_subsystem_link('core_files', [], 'privacy:metadata:historyfiles');
 
+        $collection->add_external_location_link(
+            'local_dixeo',
+            [
+                'prompt' => 'privacy:metadata:local_dixeo:prompt',
+                'images' => 'privacy:metadata:local_dixeo:images',
+            ],
+            'privacy:metadata:local_dixeo'
+        );
+
         return $collection;
     }
 
