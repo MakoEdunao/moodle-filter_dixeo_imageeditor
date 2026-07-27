@@ -24,7 +24,6 @@ namespace filter_dixeo_imageeditor\adapter;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 final class eligibility {
-
     /**
      * Whether a stored file is eligible for Dixeo editing.
      *

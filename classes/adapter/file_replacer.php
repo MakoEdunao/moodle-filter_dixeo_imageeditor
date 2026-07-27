@@ -29,7 +29,6 @@ use filter_dixeo_imageeditor\event\content_image_version_deleted;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 final class file_replacer {
-
     /** @var string File area for archived version blobs in filter storage. */
     public const FILEAREA_HISTORY = 'history';
 

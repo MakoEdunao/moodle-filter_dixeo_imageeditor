@@ -34,7 +34,6 @@ use local_dixeo\service\image\policy;
  * @covers \filter_dixeo_imageeditor\adapter\feature_gate
  */
 final class feature_gate_test extends \advanced_testcase {
-
     public function setUp(): void {
         parent::setUp();
         $this->resetAfterTest(true);

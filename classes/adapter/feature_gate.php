@@ -30,7 +30,6 @@ use local_dixeo\service\image\content\capability;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 final class feature_gate {
-
     /**
      * Whether the filter should run at all (excludes per-user caps).
      *

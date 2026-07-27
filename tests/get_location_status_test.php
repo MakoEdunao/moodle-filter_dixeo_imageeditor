@@ -41,7 +41,6 @@ require_once($CFG->dirroot . '/mod/page/lib.php');
  * @covers \filter_dixeo_imageeditor\external\get_location_status
  */
 final class get_location_status_test extends \advanced_testcase {
-
     /**
      * Return PNG bytes from core filestorage fixtures.
      */

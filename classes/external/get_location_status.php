@@ -94,7 +94,7 @@ final class get_location_status extends external_api {
                     $remotejobid,
                     $target,
                     (int) $job->userid,
-                    static function() use ($location): string {
+                    static function () use ($location): string {
                         return file_replacer::get_current_image_url($location);
                     }
                 );

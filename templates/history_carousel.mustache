@@ -2,6 +2,24 @@
     @template filter_dixeo_imageeditor/history_carousel
 
     Scrollable version history thumbnails with per-item actions menu.
+
+    Example context (json):
+    {
+        "history": [
+            {
+                "id": 42,
+                "previewurl": "https://example.com/moodle/fixture-thumb.png",
+                "timecreated": 1710000000,
+                "is_current": true
+            },
+            {
+                "id": 43,
+                "previewurl": "https://example.com/moodle/fixture-thumb-2.png",
+                "timecreated": 1710003600,
+                "is_current": false
+            }
+        ]
+    }
 }}
 <div class="dixeo-imageeditor-modal__carousel" data-region="history-carousel">
     {{#history}}
@@ -26,7 +44,7 @@
             >
                 <i class="icon fa fa-ellipsis-v fa-fw" aria-hidden="true"></i>
             </button>
-            <div class="dropdown-menu dropdown-menu-right">
+            <div class="dropdown-menu dropdown-menu-right" role="menu">
                 <button
                     type="button"
                     class="dropdown-item"

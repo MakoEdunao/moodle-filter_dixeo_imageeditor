@@ -2,6 +2,17 @@
     @template filter_dixeo_imageeditor/history_preview_modal
 
     Full-size preview of one version history entry with carousel navigation.
+
+    Example context (json):
+    {
+        "previewurl": "https://example.com/moodle/fixture-preview.png",
+        "timecreated": 1710000000,
+        "versionid": 42,
+        "has_prev": true,
+        "has_next": true,
+        "is_current": false,
+        "manual_editing": false
+    }
 }}
 <div class="dixeo-imageeditor-history-preview" data-region="history-preview-root">
     <div class="dixeo-imageeditor-history-preview__stage">

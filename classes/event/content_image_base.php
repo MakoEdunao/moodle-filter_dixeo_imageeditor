@@ -26,7 +26,6 @@ use local_dixeo\service\image\content\location;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 abstract class content_image_base extends \core\event\base {
-
     /**
      * Init method.
      */

@@ -26,7 +26,6 @@ use local_dixeo\service\image\pluginfile_helper;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 final class location_access {
-
     /**
      * Require login and filter edit capability for a stored file's course/module.
      *

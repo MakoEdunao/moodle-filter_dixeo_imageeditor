@@ -27,7 +27,6 @@ use local_dixeo\service\image\content\location;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 final class modal_apply_handler implements apply_handler {
-
     /**
      * Apply a modal poll job result via file_replacer.
      *

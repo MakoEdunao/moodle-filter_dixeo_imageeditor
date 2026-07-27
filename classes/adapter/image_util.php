@@ -24,7 +24,6 @@ namespace filter_dixeo_imageeditor\adapter;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 final class image_util {
-
     /**
      * Resolve the effective upload limit for the current user in a course.
      *
@@ -51,7 +50,7 @@ final class image_util {
      */
     public static function get_web_image_accept_attribute(): string {
         $extensions = file_get_typegroup('extension', 'web_image');
-        $extensions = array_filter($extensions, static function(string $extension): bool {
+        $extensions = array_filter($extensions, static function (string $extension): bool {
             return stripos($extension, 'svg') === false;
         });
         return implode(',', $extensions);

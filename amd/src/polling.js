@@ -73,6 +73,21 @@ define([
     };
 
     /**
+     * Best-effort acknowledgement that clears terminal lock state server-side.
+     *
+     * @param {HTMLElement} wrap
+     * @returns {void}
+     */
+    const acknowledgeTerminalStatus = (wrap) => {
+        Ajax.call([{
+            methodname: 'filter_dixeo_imageeditor_get_location_status',
+            args: Object.assign({}, imageSync.getLocationArgs(wrap), {acknowledge: true}),
+        }])[0].catch(() => {
+            // Acknowledge is best-effort cleanup.
+        });
+    };
+
+    /**
      * Show a success or error toast for a completed job.
      *
      * @param {HTMLElement} wrap
@@ -105,7 +120,7 @@ define([
         stopPolling(key);
         pollStartedAt.set(key, Date.now());
 
-        const poll = () => {
+        const poll = async() => {
             const started = pollStartedAt.get(key) || Date.now();
             if (Date.now() - started > POLL_TIMEOUT_MS) {
                 stopPolling(key);
@@ -113,17 +128,22 @@ define([
                 if (callbacks.onTimeout) {
                     callbacks.onTimeout();
                 }
-                Str.getString('error_job_failed', 'filter_dixeo_imageeditor').then((message) => {
-                    notifyJobResult(wrap, 'error', message).catch(Notification.exception);
-                }).catch(Notification.exception);
+                try {
+                    const message = await Str.getString('error_job_failed', 'filter_dixeo_imageeditor');
+                    await notifyJobResult(wrap, 'error', message);
+                } catch (error) {
+                    Notification.exception(error);
+                }
                 return;
             }
 
-            Ajax.call([{
-                methodname: 'filter_dixeo_imageeditor_get_location_status',
-                args: imageSync.getLocationArgs(wrap),
-            }])[0].then(async(status) => {
-                if (!status || !status.status) {
+            try {
+                const status = await Ajax.call([{
+                    methodname: 'filter_dixeo_imageeditor_get_location_status',
+                    args: imageSync.getLocationArgs(wrap),
+                }])[0];
+
+                if (!status?.status) {
                     return;
                 }
 
@@ -136,41 +156,33 @@ define([
                 if (status.status === 'applied') {
                     imageSync.applyImageToWrap(wrap, status.imageurl || '', status.current_contenthash || '');
                     setGeneratingOverlay(wrap, false);
-                    notifyJobResult(wrap, 'success').catch(Notification.exception);
+                    await notifyJobResult(wrap, 'success');
                     if (callbacks.onApplied) {
                         callbacks.onApplied(status);
                     }
-                    Ajax.call([{
-                        methodname: 'filter_dixeo_imageeditor_get_location_status',
-                        args: Object.assign({}, imageSync.getLocationArgs(wrap), {acknowledge: true}),
-                    }])[0].catch(() => {
-                        // Acknowledge is best-effort cleanup.
-                    });
+                    acknowledgeTerminalStatus(wrap);
                     return;
                 }
 
                 if (status.status === 'failed') {
                     setGeneratingOverlay(wrap, false);
-                    let message = status.errormessage || '';
-                    if (!message) {
-                        message = await Str.getString('error_job_failed', 'filter_dixeo_imageeditor');
-                    }
-                    notifyJobResult(wrap, 'error', message).catch(Notification.exception);
+                    const message = status.errormessage
+                        || await Str.getString('error_job_failed', 'filter_dixeo_imageeditor');
+                    await notifyJobResult(wrap, 'error', message);
                     if (callbacks.onFailed) {
                         callbacks.onFailed(status);
                     }
-                    Ajax.call([{
-                        methodname: 'filter_dixeo_imageeditor_get_location_status',
-                        args: Object.assign({}, imageSync.getLocationArgs(wrap), {acknowledge: true}),
-                    }])[0].catch(() => {
-                        // Acknowledge is best-effort cleanup.
-                    });
+                    acknowledgeTerminalStatus(wrap);
                 }
-            }).catch(Notification.exception);
+            } catch (error) {
+                Notification.exception(error);
+            }
         };
 
-        pollTimers.set(key, window.setInterval(poll, POLL_INTERVAL_MS));
-        poll();
+        pollTimers.set(key, window.setInterval(() => {
+            poll().catch(Notification.exception);
+        }, POLL_INTERVAL_MS));
+        poll().catch(Notification.exception);
     };
 
     /**
@@ -189,20 +201,25 @@ define([
             if (wrap.dataset.dixeoPending !== '1') {
                 return;
             }
-            Ajax.call([{
-                methodname: 'filter_dixeo_imageeditor_get_location_status',
-                args: imageSync.getLocationArgs(wrap),
-            }])[0].then((status) => {
-                if (!status) {
-                    return;
-                }
-                if (status.status === 'pending' || status.status === 'processing') {
-                    Str.getString('generating_status', 'filter_dixeo_imageeditor').then((label) => {
+
+            const resume = async() => {
+                try {
+                    const status = await Ajax.call([{
+                        methodname: 'filter_dixeo_imageeditor_get_location_status',
+                        args: imageSync.getLocationArgs(wrap),
+                    }])[0];
+
+                    if (status?.status === 'pending' || status?.status === 'processing') {
+                        const label = await Str.getString('generating_status', 'filter_dixeo_imageeditor');
                         setGeneratingOverlay(wrap, true, label);
                         startStatusPolling(wrap);
-                    });
+                    }
+                } catch {
+                    // Ignore resume failures on pages without webservice access.
                 }
-            }).catch(() => {
+            };
+
+            resume().catch(() => {
                 // Ignore resume failures on pages without webservice access.
             });
         });

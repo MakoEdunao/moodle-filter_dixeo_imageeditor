@@ -35,6 +35,10 @@ define([
 ], function(Ajax, CancelModal, ModalEvents, Notification, Templates, Str, PreviewEditor, imageSync, polling, toast) {
     'use strict';
 
+    /* eslint-disable camelcase -- Mustache context and webservice fields use Moodle snake_case. */
+    /* eslint-disable promise/no-nesting -- Modal handlers layer sync DOM events on async Ajax flows. */
+    /* eslint-disable promise/always-return -- Fire-and-forget acknowledgement calls after job completion. */
+
 const SELECTORS = {
     wrap: '[data-dixeo-imageeditor="1"]',
     openButton: '[data-action="open-editor"]',
@@ -894,7 +898,7 @@ const openEditor = (wrap) => {
                                 wrap,
                                 root,
                                 previewEditor,
-                                syncHistory: async() => {},
+                                syncHistory: async() => undefined,
                             });
                         }
                         const snapshot = await fetchEditorSnapshot(wrap);

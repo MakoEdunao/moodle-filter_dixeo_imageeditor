@@ -26,7 +26,6 @@ use local_dixeo\service\image\content\location;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class content_image_job_started extends content_image_base {
-
     /**
      * Init method.
      */

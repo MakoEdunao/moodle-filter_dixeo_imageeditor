@@ -42,7 +42,6 @@ require_once($CFG->dirroot . '/mod/page/lib.php');
  * @covers \filter_dixeo_imageeditor\external\revert_version
  */
 final class revert_version_test extends \advanced_testcase {
-
     /**
      * Return PNG bytes from core filestorage fixtures.
      */

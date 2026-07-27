@@ -2,6 +2,18 @@
     @template filter_dixeo_imageeditor/history_section
 
     History carousel wrapper with section label.
+
+    Example context (json):
+    {
+        "history": [
+            {
+                "id": 42,
+                "previewurl": "https://example.com/moodle/fixture-thumb.png",
+                "timecreated": 1710000000,
+                "is_current": true
+            }
+        ]
+    }
 }}
 <div class="dixeo-imageeditor-modal__history mt-3" data-region="history-wrapper">
     <div class="dixeo-imageeditor-modal__history-label">{{#str}} history_label, filter_dixeo_imageeditor {{/str}}</div>

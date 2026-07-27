@@ -34,7 +34,8 @@ function xmldb_filter_dixeo_imageeditor_upgrade($oldversion) {
     $dbman = $DB->get_manager();
 
     if ($oldversion < 2026070600) {
-        if ($dbman->table_exists('filter_dixeo_imageeditor_lock')
+        if (
+            $dbman->table_exists('filter_dixeo_imageeditor_lock')
             && $dbman->table_exists('local_dixeo_image_job')
         ) {
             $locks = $DB->get_records('filter_dixeo_imageeditor_lock');

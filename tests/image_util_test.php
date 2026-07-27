@@ -33,7 +33,6 @@ use filter_dixeo_imageeditor\adapter\image_util;
  * @covers \filter_dixeo_imageeditor\adapter\image_util
  */
 final class image_util_test extends \advanced_testcase {
-
     /** @var int */
     private int $courseid;
 

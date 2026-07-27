@@ -43,7 +43,6 @@ require_once($CFG->dirroot . '/mod/page/lib.php');
  * @covers \filter_dixeo_imageeditor\external\get_editor_context
  */
 final class get_editor_context_test extends \advanced_testcase {
-
     /**
      * Return PNG bytes from core filestorage fixtures.
      */

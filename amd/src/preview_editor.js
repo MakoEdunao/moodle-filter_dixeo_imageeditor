@@ -22,13 +22,19 @@
  */
 
 define([
-    'filter_dixeo_imageeditor/vendor/cropper',
+    'filter_dixeo_imageeditor/lib/cropper',
 ], function(Cropper) {
     'use strict';
 
 /** @typedef {{grayscale: boolean, sepia: boolean, brightness: number, contrast: number}} FilterState */
 
-const DEFAULT_FILTERS = () => ({
+const noop = () => {
+    // Default callback stub.
+};
+
+const noopAsync = () => Promise.resolve();
+
+const createDefaultFilters = () => ({
     grayscale: false,
     sepia: false,
     brightness: 100,
@@ -122,9 +128,9 @@ class PreviewEditor {
     constructor(panel, options) {
         this.panel = panel;
         this.wrap = options.wrap;
-        this.onStateChange = options.onStateChange || (() => {});
-        this.onSaveRequest = options.onSaveRequest || (() => Promise.resolve());
-        this.onSaveError = options.onSaveError || (() => {});
+        this.onStateChange = options.onStateChange || noop;
+        this.onSaveRequest = options.onSaveRequest || noopAsync;
+        this.onSaveError = options.onSaveError || noop;
 
         this.image = panel.querySelector('[data-region="preview-image"]');
         this.toolbars = panel.querySelector('[data-region="preview-toolbars"]');
@@ -146,7 +152,7 @@ class PreviewEditor {
         /** @type {string} */
         this.workingImageSrc = '';
         /** @type {FilterState} */
-        this.filters = DEFAULT_FILTERS();
+        this.filters = createDefaultFilters();
         /** @type {Array<Object>} */
         this.history = [];
         /** @type {number} */
@@ -291,7 +297,7 @@ class PreviewEditor {
             this.cropper.setData(snapshot.data);
         }
 
-        this.filters = {...DEFAULT_FILTERS(), ...(snapshot.filters || {})};
+        this.filters = {...createDefaultFilters(), ...(snapshot.filters || {})};
         this.flipH = !!snapshot.flipH;
         this.flipV = !!snapshot.flipV;
 
@@ -612,7 +618,7 @@ class PreviewEditor {
                 }
 
                 if (snapshot) {
-                    this.filters = {...DEFAULT_FILTERS(), ...(snapshot.filters || {})};
+                    this.filters = {...createDefaultFilters(), ...(snapshot.filters || {})};
                     this.flipH = !!snapshot.flipH;
                     this.flipV = !!snapshot.flipV;
                 }
@@ -843,7 +849,7 @@ class PreviewEditor {
 
         this.baselineSrc = this.image.src;
         this.workingImageSrc = this.image.src;
-        this.filters = DEFAULT_FILTERS();
+        this.filters = createDefaultFilters();
         this.flipH = false;
         this.flipV = false;
         this.brightnessSliderVisible = false;
@@ -903,7 +909,7 @@ class PreviewEditor {
 
         this.editing = false;
         this.saving = false;
-        this.filters = DEFAULT_FILTERS();
+        this.filters = createDefaultFilters();
         this.flipH = false;
         this.flipV = false;
         this.brightnessSliderVisible = false;
@@ -953,7 +959,7 @@ class PreviewEditor {
         }
 
         const filterCss = buildCssFilter(this.filters);
-        if (filterCss === buildCssFilter(DEFAULT_FILTERS())) {
+        if (filterCss === buildCssFilter(createDefaultFilters())) {
             return canvas;
         }
 
@@ -1113,71 +1119,58 @@ class PreviewEditor {
     }
 
     /**
+     * @param {string} action
      * @param {Event} event
+     * @returns {boolean} True when the action was handled.
      */
-    handlePanelClick(event) {
-        const target = event.target;
-        if (!(target instanceof HTMLElement)) {
-            return;
-        }
-
-        if (!this.editing) {
-            if (target.closest('[data-action="manual-edit-start"]')) {
-                event.preventDefault();
-                this.enterEditMode().catch((error) => this.handleActionError(error));
-            }
-            return;
-        }
-
-        const actionEl = target.closest('[data-action]');
-        if (!(actionEl instanceof HTMLElement)) {
-            return;
-        }
-
-        const action = actionEl.dataset.action;
-        if (!action || !action.startsWith('manual-')) {
-            return;
-        }
-
+    handleManualToolbarAction(action, event) {
         if (action === 'manual-save') {
             event.preventDefault();
             this.save().catch((error) => this.handleActionError(error));
-            return;
+            return true;
         }
         if (action === 'manual-discard') {
             event.preventDefault();
             this.discard();
-            return;
+            return true;
         }
         if (action === 'manual-download') {
             event.preventDefault();
             const filename = this.wrap?.dataset.filename || 'image.png';
             this.download(filename).catch((error) => this.handleActionError(error));
-            return;
+            return true;
         }
         if (action === 'manual-toggle-brightness') {
             event.preventDefault();
             this.brightnessSliderVisible = !this.brightnessSliderVisible;
             this.syncToneControlsUi();
-            return;
+            return true;
         }
         if (action === 'manual-toggle-contrast') {
             event.preventDefault();
             this.contrastSliderVisible = !this.contrastSliderVisible;
             this.syncToneControlsUi();
-            return;
+            return true;
         }
         if (action === 'manual-undo') {
             event.preventDefault();
             this.undo().catch((error) => this.handleActionError(error));
-            return;
+            return true;
         }
         if (action === 'manual-redo') {
             event.preventDefault();
             this.redo().catch((error) => this.handleActionError(error));
-            return;
+            return true;
         }
+        return false;
+    }
 
+    /**
+     * @param {string} action
+     * @param {Event} event
+     * @returns {void}
+     */
+    handleCropperToolbarAction(action, event) {
         if (!this.cropper) {
             return;
         }
@@ -1232,6 +1225,40 @@ class PreviewEditor {
             default:
                 return;
         }
+    }
+
+    /**
+     * @param {Event} event
+     */
+    handlePanelClick(event) {
+        const target = event.target;
+        if (!(target instanceof HTMLElement)) {
+            return;
+        }
+
+        if (!this.editing) {
+            if (target.closest('[data-action="manual-edit-start"]')) {
+                event.preventDefault();
+                this.enterEditMode().catch((error) => this.handleActionError(error));
+            }
+            return;
+        }
+
+        const actionEl = target.closest('[data-action]');
+        if (!(actionEl instanceof HTMLElement)) {
+            return;
+        }
+
+        const action = actionEl.dataset.action;
+        if (!action || !action.startsWith('manual-')) {
+            return;
+        }
+
+        if (this.handleManualToolbarAction(action, event)) {
+            return;
+        }
+
+        this.handleCropperToolbarAction(action, event);
     }
 
     /**

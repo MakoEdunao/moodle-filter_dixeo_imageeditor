@@ -33,7 +33,6 @@ use filter_dixeo_imageeditor\adapter\eligibility;
  * @covers \filter_dixeo_imageeditor\adapter\eligibility
  */
 final class eligibility_test extends \advanced_testcase {
-
     public function setUp(): void {
         parent::setUp();
         $this->resetAfterTest(true);

@@ -30,7 +30,6 @@ use local_dixeo\service\image\content\location;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class text_filter extends \core_filters\text_filter {
-
     /** @var bool */
     private static bool $amdsloaded = false;
 

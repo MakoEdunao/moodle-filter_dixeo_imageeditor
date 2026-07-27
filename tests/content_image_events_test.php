@@ -51,7 +51,6 @@ require_once($CFG->dirroot . '/mod/page/lib.php');
  * @covers \filter_dixeo_imageeditor\event\content_image_job_started
  */
 final class content_image_events_test extends \advanced_testcase {
-
     /**
      * Return PNG bytes from core filestorage fixtures.
      */

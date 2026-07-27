@@ -2,6 +2,39 @@
     @template filter_dixeo_imageeditor/editor_modal
 
     Modal body for AI image generate/edit.
+
+    Example context (json):
+    {
+        "imageurl": "https://example.com/moodle/fixture-image.png",
+        "can_generate": true,
+        "can_edit": true,
+        "can_manage_image": true,
+        "show_ai_panel": true,
+        "show_mode_toggle": true,
+        "show_ai_edit_mode": true,
+        "mode_generate_active": true,
+        "mode_edit_active": false,
+        "upload_accept": ".png,.jpg,.jpeg,.gif,.webp",
+        "has_history": true,
+        "qualities": [
+            {"value": "low", "selected": false, "low": true},
+            {"value": "medium", "selected": true, "medium": true},
+            {"value": "high", "selected": false, "high": true}
+        ],
+        "aspects": [
+            {"value": "landscape", "size": "1536x1024", "icon": "fa-mobile fa-rotate-90", "selected": true, "landscape": true},
+            {"value": "square", "size": "1024x1024", "icon": "fa-square", "selected": false, "square": true},
+            {"value": "portrait", "size": "1024x1536", "icon": "fa-mobile", "selected": false, "portrait": true}
+        ],
+        "history": [
+            {
+                "id": 42,
+                "previewurl": "https://example.com/moodle/fixture-thumb.png",
+                "timecreated": 1710000000,
+                "is_current": true
+            }
+        ]
+    }
 }}
 <div class="dixeo-imageeditor-modal" data-region="modal-root">
     <div class="row">

@@ -42,7 +42,6 @@ require_once($CFG->dirroot . '/mod/page/lib.php');
  * @covers \filter_dixeo_imageeditor\external\apply_manual_edit
  */
 final class apply_manual_edit_test extends \advanced_testcase {
-
     /**
      * Return PNG bytes from core filestorage fixtures.
      */
