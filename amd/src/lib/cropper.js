@@ -1,19 +1,19 @@
 /* eslint-disable */
 /*!
- * Cropper.js v1.6.2
+ * Cropper.js v1.6.2 (Moodle AMD wrapper).
  * https://fengyuanchen.github.io/cropperjs
  *
  * Copyright 2015-present Chen Fengyuan
  * Released under the MIT license
- *
- * Date: 2024-04-21T07:43:05.335Z
  */
 
-(function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-  typeof define === 'function' && define.amd ? define(factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.Cropper = factory());
-})(this, (function () { 'use strict';
+/**
+ * @module     filter_dixeo_imageeditor/lib/cropper
+ * @copyright  2015-present Chen Fengyuan
+ * @license    MIT
+ */
+define([], function() {
+    'use strict';
 
   function ownKeys(e, r) {
     var t = Object.keys(e);
@@ -3269,5 +3269,4 @@
   assign(Cropper.prototype, render, preview, events, handlers, change, methods);
 
   return Cropper;
-
-}));
+});
