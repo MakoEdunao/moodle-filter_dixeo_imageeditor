@@ -83,6 +83,44 @@
     pointer-events: none;
 }
 
+.dixeo-imageeditor-toast {
+    position: absolute;
+    top: 0.5rem;
+    left: 50%;
+    z-index: 5;
+    max-width: calc(100% - 1rem);
+    padding: 0.5rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.2;
+    text-align: center;
+    opacity: 0;
+    transform: translateX(-50%) translateY(-0.35rem);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
+    box-shadow: 0 4px 14px rgba(16, 27, 44, 0.18);
+}
+
+.dixeo-imageeditor-toast.is-visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.dixeo-imageeditor-toast.is-success {
+    background: rgba(16, 27, 44, 0.88);
+    color: #fff;
+}
+
+.dixeo-imageeditor-toast.is-error {
+    background: rgba(176, 42, 55, 0.92);
+    color: #fff;
+}
+
+.dixeo-imageeditor-modal__preview .dixeo-imageeditor-toast {
+    top: 1rem;
+}
+
 @keyframes dixeo-imageeditor-shimmer {
     0% {
         background-position: 200% 0, 0 0;

@@ -11,7 +11,7 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle. If not, see <https://www.gnu.org/licenses/>.
 
 /**
  * Embedded content image editor UI.
@@ -31,7 +31,8 @@ define([
     'filter_dixeo_imageeditor/preview_editor',
     'filter_dixeo_imageeditor/image_sync',
     'filter_dixeo_imageeditor/polling',
-], function(Ajax, CancelModal, ModalEvents, Notification, Templates, Str, PreviewEditor, imageSync, polling) {
+    'filter_dixeo_imageeditor/toast',
+], function(Ajax, CancelModal, ModalEvents, Notification, Templates, Str, PreviewEditor, imageSync, polling, toast) {
     'use strict';
 
 const SELECTORS = {
@@ -140,6 +141,18 @@ const confirmReplaceImage = async() => {
 };
 
 /**
+ * Show a short success toast on the embedded image and in the modal preview.
+ *
+ * @param {HTMLElement} wrap
+ * @param {HTMLElement|null} root
+ * @returns {Promise<void>}
+ */
+const notifyImageUpdated = async(wrap, root = null) => {
+    const message = await Str.getString('image_updated', COMPONENT);
+    toast.showResult(wrap, root, message, 'success');
+};
+
+/**
  * Toggle generating overlay on the modal preview panel.
  *
  * @param {HTMLElement} root
@@ -234,7 +247,7 @@ const mapHistoryForCarousel = (history, currentContenthash) => (history || []).m
 const buildModalContext = (context, mode) => {
     const canGenerate = context.policy_can_generate && context.cap_can_generate;
     const canEdit = context.policy_can_edit && context.cap_can_edit;
-    const showAiPanel = canGenerate;
+    const showAiPanel = canGenerate || canEdit;
     const showModeToggle = canGenerate && canEdit;
     const showAiEditMode = canEdit;
     const activeMode = showAiEditMode && mode === 'edit' ? 'edit' : 'generate';
@@ -454,6 +467,7 @@ const openHistoryPreviewModal = async(options) => {
                 await onHistoryChange(history, contenthash || '');
             },
         });
+        await notifyImageUpdated(wrap, editorRoot);
         previewModal.hide();
     };
 
@@ -575,6 +589,7 @@ const openEditor = (wrap) => {
         modal.setButtonText('cancel', await Str.getString('close', 'filter_dixeo_imageeditor'));
 
         const root = modal.getRoot()[0];
+        toast.registerOpenModal(wrap, root);
         const previewPanel = root.querySelector('[data-region="preview-panel"]');
         let previewEditor = null;
 
@@ -606,7 +621,9 @@ const openEditor = (wrap) => {
                             image_base64: imageBase64,
                         },
                     }])[0];
-                    return imageSync.applyImageResponse(response, imageResponseContext());
+                    const result = await imageSync.applyImageResponse(response, imageResponseContext());
+                    await notifyImageUpdated(wrap, root);
+                    return result;
                 },
             });
         }
@@ -640,6 +657,7 @@ const openEditor = (wrap) => {
         });
 
         modal.getRoot().on(ModalEvents.hidden, () => {
+            toast.unregisterOpenModal(wrap);
             releaseOpeningWrap(wrap);
             previewEditor?.destroy();
             modal.destroy();
@@ -710,7 +728,11 @@ const openEditor = (wrap) => {
         const handleSetCurrent = (versionid) => Ajax.call([{
             methodname: 'filter_dixeo_imageeditor_revert_version',
             args: {...imageSync.getLocationArgs(wrap), versionid},
-        }])[0].then((response) => imageSync.applyImageResponse(response, imageResponseContext()));
+        }])[0].then(async(response) => {
+            const result = await imageSync.applyImageResponse(response, imageResponseContext());
+            await notifyImageUpdated(wrap, root);
+            return result;
+        });
 
         const handleDeleteHistory = (versionid) => Ajax.call([{
             methodname: 'filter_dixeo_imageeditor_delete_version',
@@ -765,6 +787,7 @@ const openEditor = (wrap) => {
                     },
                 }])[0];
                 await imageSync.applyImageResponse(response, imageResponseContext());
+                await notifyImageUpdated(wrap, root);
             } catch (error) {
                 Notification.exception(error);
             } finally {

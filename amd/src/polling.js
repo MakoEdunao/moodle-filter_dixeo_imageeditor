@@ -11,7 +11,7 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle. If not, see <https://www.gnu.org/licenses/>.
 
 /**
  * Client-side polling for async image job status.
@@ -26,7 +26,8 @@ define([
     'core/notification',
     'core/str',
     'filter_dixeo_imageeditor/image_sync',
-], function(Ajax, Notification, Str, imageSync) {
+    'filter_dixeo_imageeditor/toast',
+], function(Ajax, Notification, Str, imageSync, toast) {
     'use strict';
 
     const GENERATING_CLASS = 'is-generating';
@@ -72,6 +73,25 @@ define([
     };
 
     /**
+     * Show a success or error toast for a completed job.
+     *
+     * @param {HTMLElement} wrap
+     * @param {'success'|'error'} type
+     * @param {string} [message]
+     * @returns {Promise<void>}
+     */
+    const notifyJobResult = async(wrap, type, message = '') => {
+        let text = message;
+        if (!text) {
+            text = await Str.getString(
+                type === 'success' ? 'image_updated' : 'error_job_failed',
+                'filter_dixeo_imageeditor'
+            );
+        }
+        toast.showJobResult(wrap, text, type);
+    };
+
+    /**
      * Poll lock status for UX overlay only.
      *
      * @param {HTMLElement} wrap
@@ -94,7 +114,7 @@ define([
                     callbacks.onTimeout();
                 }
                 Str.getString('error_job_failed', 'filter_dixeo_imageeditor').then((message) => {
-                    Notification.addNotification({message, type: 'error'});
+                    notifyJobResult(wrap, 'error', message).catch(Notification.exception);
                 }).catch(Notification.exception);
                 return;
             }
@@ -116,6 +136,7 @@ define([
                 if (status.status === 'applied') {
                     imageSync.applyImageToWrap(wrap, status.imageurl || '', status.current_contenthash || '');
                     setGeneratingOverlay(wrap, false);
+                    notifyJobResult(wrap, 'success').catch(Notification.exception);
                     if (callbacks.onApplied) {
                         callbacks.onApplied(status);
                     }
@@ -130,14 +151,14 @@ define([
 
                 if (status.status === 'failed') {
                     setGeneratingOverlay(wrap, false);
-                    if (callbacks.onFailed) {
-                        callbacks.onFailed(status);
-                    }
                     let message = status.errormessage || '';
                     if (!message) {
                         message = await Str.getString('error_job_failed', 'filter_dixeo_imageeditor');
                     }
-                    Notification.addNotification({message, type: 'error'});
+                    notifyJobResult(wrap, 'error', message).catch(Notification.exception);
+                    if (callbacks.onFailed) {
+                        callbacks.onFailed(status);
+                    }
                     Ajax.call([{
                         methodname: 'filter_dixeo_imageeditor_get_location_status',
                         args: Object.assign({}, imageSync.getLocationArgs(wrap), {acknowledge: true}),
@@ -193,5 +214,6 @@ define([
         stopPolling,
         startStatusPolling,
         resumePendingOverlays,
+        notifyJobResult,
     };
 });
