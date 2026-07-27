@@ -250,7 +250,7 @@ final class file_replacer_test extends \advanced_testcase {
         $this->assertCount(1, $history);
         $versionid = (int) $history[0]['id'];
 
-        file_replacer::delete_version($versionid, $location);
+        file_replacer::delete_version($versionid, $location, (int) $USER->id);
 
         $this->assertEmpty(file_replacer::get_history_for_location($location));
         $this->assertFalse($DB->record_exists('filter_dixeo_imageeditor_version', ['id' => $versionid]));
@@ -295,7 +295,7 @@ final class file_replacer_test extends \advanced_testcase {
         [$otherlocation] = $this->create_page_image_location();
 
         $this->expectException(\moodle_exception::class);
-        file_replacer::delete_version($versionid, $otherlocation);
+        file_replacer::delete_version($versionid, $otherlocation, (int) $USER->id);
     }
 
     public function test_delete_version_rejects_current_contenthash(): void {
@@ -320,7 +320,7 @@ final class file_replacer_test extends \advanced_testcase {
         );
 
         try {
-            file_replacer::delete_version($pngversionid, $location);
+            file_replacer::delete_version($pngversionid, $location, (int) $USER->id);
             $this->fail('Expected moodle_exception');
         } catch (\moodle_exception $e) {
             $this->assertSame('error_delete_current', $e->errorcode);

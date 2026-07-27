@@ -27,6 +27,7 @@ namespace filter_dixeo_imageeditor;
 
 use context_module;
 use filter_dixeo_imageeditor\external\start_generate;
+use local_dixeo\dto\job_binding_metadata;
 use local_dixeo\service\image\content\location;
 use local_dixeo\repository\image\job_repository;
 use local_dixeo\dto\operation_result;
@@ -164,6 +165,18 @@ final class start_generate_test extends \advanced_testcase {
         $mock = $this->createMock(image_generation_service::class);
         $mock->expects($this->once())
             ->method('submit_content_image_generate_job')
+            ->with(
+                $this->anything(),
+                $this->anything(),
+                $this->anything(),
+                $this->anything(),
+                $this->anything(),
+                $this->callback(static function (?job_binding_metadata $metadata): bool {
+                    return $metadata !== null
+                        && $metadata->moduletype === 'page'
+                        && $metadata->cmid > 0;
+                })
+            )
             ->willReturn(operation_result::pending('remote-job-99', 'pending', 0));
         service_factory::set_test_image_generation_service($mock);
 

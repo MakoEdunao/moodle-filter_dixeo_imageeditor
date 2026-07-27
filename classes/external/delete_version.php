@@ -68,6 +68,8 @@ final class delete_version extends external_api {
         int $courseid,
         int $versionid
     ): array {
+        global $USER;
+
         $params = self::validate_parameters(self::execute_parameters(), [
             'contextid' => $contextid,
             'component' => $component,
@@ -85,7 +87,7 @@ final class delete_version extends external_api {
             throw new \moodle_exception('error_delete_blocked', 'filter_dixeo_imageeditor');
         }
 
-        file_replacer::delete_version((int) $params['versionid'], $location);
+        file_replacer::delete_version((int) $params['versionid'], $location, (int) $USER->id);
 
         return [
             'current_contenthash' => file_replacer::get_current_contenthash($location),

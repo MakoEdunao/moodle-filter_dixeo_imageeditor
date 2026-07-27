@@ -19,9 +19,13 @@ namespace filter_dixeo_imageeditor\external;
 use core_external\external_api;
 use core_external\external_function_parameters;
 use core_external\external_value;
+use filter_dixeo_imageeditor\adapter\file_replacer;
+use local_dixeo\repository\image\job_repository;
+use local_dixeo\service\image\content_target;
+use local_dixeo\service\image\poll\client_poll;
 
 /**
- * Poll lock status for UX overlay (does not apply jobs).
+ * Poll lock status for UX overlay; may apply completed jobs via client_poll.
  *
  * @package    filter_dixeo_imageeditor
  * @copyright  2026 Dixeo
@@ -77,7 +81,27 @@ final class get_location_status extends external_api {
         ]);
 
         $location = self::validate_location($params);
-        return \local_dixeo\repository\image\job_repository::get_location_status($location, (bool) $params['acknowledge']);
+        $target = content_target::from_location($location);
+        $job = job_repository::get_active_job($target);
+
+        if (
+            $job
+            && in_array($job->status, [job_repository::STATUS_PENDING, job_repository::STATUS_PROCESSING], true)
+        ) {
+            $remotejobid = trim((string) ($job->jobid ?? ''));
+            if ($remotejobid !== '') {
+                client_poll::poll_once(
+                    $remotejobid,
+                    $target,
+                    (int) $job->userid,
+                    static function() use ($location): string {
+                        return file_replacer::get_current_image_url($location);
+                    }
+                );
+            }
+        }
+
+        return job_repository::get_location_status($location, (bool) $params['acknowledge']);
     }
 
     /**
