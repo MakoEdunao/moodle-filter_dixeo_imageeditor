@@ -17,6 +17,7 @@
 namespace filter_dixeo_imageeditor\adapter;
 
 use local_dixeo\service\image\policy;
+use local_dixeo\service\image\content\capability;
 
 /**
  * Feature gate checks for the filter and its externals.
@@ -75,9 +76,41 @@ final class feature_gate {
      */
     public static function capability_flags(int $courseid): array {
         $context = \context_course::instance($courseid);
+        $hasfilteredit = has_capability('filter/dixeo_imageeditor:edit', $context);
+        $cangenerate = has_capability('local/dixeo:contentimagegenerate', $context) || $hasfilteredit;
+        $canedit = has_capability('local/dixeo:contentimageedit', $context) || $hasfilteredit;
+
         return [
-            'can_generate' => has_capability('local/dixeo:contentimagegenerate', $context),
-            'can_edit' => has_capability('local/dixeo:contentimageedit', $context),
+            'can_generate' => $cangenerate,
+            'can_edit' => $canedit,
         ];
+    }
+
+    /**
+     * Require permission to start a content image generate job.
+     *
+     * @param int $courseid
+     * @return void
+     */
+    public static function require_content_generate(int $courseid): void {
+        $context = \context_course::instance($courseid);
+        if (has_capability('filter/dixeo_imageeditor:edit', $context)) {
+            return;
+        }
+        capability::require_generate($courseid);
+    }
+
+    /**
+     * Require permission to start a content image edit job.
+     *
+     * @param int $courseid
+     * @return void
+     */
+    public static function require_content_edit(int $courseid): void {
+        $context = \context_course::instance($courseid);
+        if (has_capability('filter/dixeo_imageeditor:edit', $context)) {
+            return;
+        }
+        capability::require_edit($courseid);
     }
 }
