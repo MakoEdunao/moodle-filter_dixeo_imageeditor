@@ -20,10 +20,11 @@ use core_external\external_api;
 use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_value;
+use filter_dixeo_imageeditor\adapter\feature_gate;
 use filter_dixeo_imageeditor\adapter\file_replacer;
+use local_dixeo\dto\job_binding_metadata;
 use local_dixeo\repository\image\job_repository;
 use local_dixeo\external\service_factory;
-use local_dixeo\service\image\content\capability;
 use local_dixeo\service\image_generation_service;
 
 /**
@@ -93,7 +94,7 @@ final class start_generate extends external_api {
         ]);
 
         $location = self::validate_location($params);
-        capability::require_generate($location->courseid);
+        feature_gate::require_content_generate($location->courseid);
 
         if (trim($params['prompt']) === '') {
             throw new \moodle_exception('prompt_required', 'filter_dixeo_imageeditor');
@@ -103,8 +104,11 @@ final class start_generate extends external_api {
             throw new \moodle_exception('error_locked', 'filter_dixeo_imageeditor');
         }
 
+        $quality = self::validate_image_quality($params['quality']);
+
         $file = $location->get_stored_file();
         $title = image_generation_service::resolve_title_for_stored_file($file);
+        $binding = job_binding_metadata::for_stored_file($file);
 
         $imageservice = service_factory::get_image_generation_service();
         $result = $imageservice->submit_content_image_generate_job(
@@ -112,7 +116,8 @@ final class start_generate extends external_api {
             $title,
             trim($params['prompt']),
             $params['size'],
-            $params['quality']
+            $quality,
+            $binding
         );
 
         $jobid = trim((string) $result->jobid);
@@ -133,7 +138,7 @@ final class start_generate extends external_api {
             (int) $USER->id,
             file_replacer::SOURCE_GENERATED,
             trim($params['prompt']),
-            $params['quality'],
+            $quality,
             $mode
         );
     }

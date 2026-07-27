@@ -23,10 +23,12 @@ use core_external\external_value;
 use filter_dixeo_imageeditor\adapter\eligibility;
 use filter_dixeo_imageeditor\adapter\location_access;
 use filter_dixeo_imageeditor\adapter\file_replacer;
+use local_dixeo\dto\job_binding_metadata;
 use local_dixeo\repository\image\job_repository;
 use local_dixeo\service\image\job_orchestrator;
 use local_dixeo\service\image\content\location;
 use local_dixeo\service\image\content_target;
+use local_dixeo\service\image_generation_service;
 
 /**
  * Shared validation for filter externals.
@@ -106,6 +108,21 @@ trait location_parameters {
     }
 
     /**
+     * Normalise image quality to a supported API value.
+     *
+     * @param string $quality
+     * @return string
+     */
+    protected static function validate_image_quality(string $quality): string {
+        $quality = strtolower(trim($quality));
+        if (!in_array($quality, ['low', 'medium', 'high'], true)) {
+            return image_generation_service::DEFAULT_QUALITY;
+        }
+
+        return $quality;
+    }
+
+    /**
      * Standard response after an in-place image replacement.
      *
      * @param location $location
@@ -140,6 +157,10 @@ trait location_parameters {
         ?string $quality = null,
         ?string $mode = null
     ): array {
+        $file = $location->get_stored_file();
+        $binding = $file ? job_binding_metadata::for_stored_file($file) : null;
+        $cmid = ($binding !== null && $binding->cmid > 0) ? $binding->cmid : null;
+
         job_orchestrator::submit_and_queue(
             content_target::from_location($location),
             $jobid,
@@ -149,7 +170,7 @@ trait location_parameters {
                 'targettable' => null,
                 'targetfield' => null,
                 'targetid' => null,
-                'cmid' => null,
+                'cmid' => $cmid,
                 'origin' => job_repository::ORIGIN_MODAL,
                 'prompt' => $prompt,
                 'quality' => $quality,
