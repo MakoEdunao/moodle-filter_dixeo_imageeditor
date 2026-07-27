@@ -84,7 +84,11 @@ function filter_dixeo_imageeditor_pluginfile(
         return false;
     }
 
-    require_capability('filter/dixeo_imageeditor:edit', \context_course::instance($courseid));
+    try {
+        \filter_dixeo_imageeditor\adapter\location_access::require_edit_access_for_file($targetfile);
+    } catch (\Throwable $e) {
+        return false;
+    }
 
     $fs = get_file_storage();
     $file = $fs->get_file($context->id, 'filter_dixeo_imageeditor', 'history', $itemid, $filepath, $filename);

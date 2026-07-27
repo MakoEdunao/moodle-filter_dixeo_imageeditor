@@ -21,7 +21,7 @@ use core_external\external_multiple_structure;
 use core_external\external_single_structure;
 use core_external\external_value;
 use filter_dixeo_imageeditor\adapter\eligibility;
-use filter_dixeo_imageeditor\adapter\feature_gate;
+use filter_dixeo_imageeditor\adapter\location_access;
 use filter_dixeo_imageeditor\adapter\file_replacer;
 use local_dixeo\repository\image\job_repository;
 use local_dixeo\service\image\job_orchestrator;
@@ -77,10 +77,32 @@ trait location_parameters {
             throw new \moodle_exception('error_not_eligible', 'filter_dixeo_imageeditor');
         }
 
-        self::validate_context(\context_course::instance($location->courseid));
-        feature_gate::require_filter_edit($location->courseid);
+        self::authorise_location_access($file, $location->courseid);
 
         return $location;
+    }
+
+    /**
+     * Require login and validate context for the stored file location.
+     *
+     * @param \stored_file $file
+     * @param int $courseid
+     * @return void
+     */
+    protected static function authorise_location_access(\stored_file $file, int $courseid): void {
+        location_access::require_edit_access_for_file($file);
+
+        $filecontext = \context::instance_by_id($file->get_contextid(), IGNORE_MISSING);
+        if (!$filecontext) {
+            throw new \moodle_exception('error_not_eligible', 'filter_dixeo_imageeditor');
+        }
+
+        if ($filecontext->contextlevel === CONTEXT_MODULE) {
+            $cm = get_coursemodule_from_id(null, $filecontext->instanceid, 0, false, MUST_EXIST);
+            self::validate_context(\context_module::instance($cm->id));
+        } else {
+            self::validate_context(\context_course::instance($courseid));
+        }
     }
 
     /**
