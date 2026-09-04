@@ -46,24 +46,7 @@
     opacity: 1;
 }
 
-.dixeo-imageeditor-wrap.is-generating {
-    position: relative;
-    overflow: hidden;
-    isolation: isolate;
-}
-
-.dixeo-imageeditor-wrap.is-generating::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    background:
-        linear-gradient(110deg, rgba(255, 255, 255, 0.12) 16%, rgba(255, 255, 255, 0.32) 34%, rgba(255, 255, 255, 0.12) 52%),
-        linear-gradient(180deg, rgba(16, 27, 44, 0.24) 0%, rgba(16, 27, 44, 0.38) 100%);
-    background-size: 220% 100%, 100% 100%;
-    animation: dixeo-imageeditor-shimmer 1.8s linear infinite;
-    pointer-events: none;
-}
+/* Shimmer overlay (::before) + @keyframes dixeo-shimmer live in local_dixeo/styles.css. */
 
 .dixeo-imageeditor-wrap.is-generating::after {
     content: attr(data-dixeo-image-generating-label);
@@ -119,16 +102,6 @@
 
 .dixeo-imageeditor-modal__preview .dixeo-imageeditor-toast {
     top: 1rem;
-}
-
-@keyframes dixeo-imageeditor-shimmer {
-    0% {
-        background-position: 200% 0, 0 0;
-    }
-
-    100% {
-        background-position: -200% 0, 0 0;
-    }
 }
 
 .dixeo-imageeditor-modal-dialog.modal-xl {
@@ -202,19 +175,6 @@
     margin-top: 0;
     overflow: hidden;
     isolation: isolate;
-}
-
-.dixeo-imageeditor-modal__preview.is-generating::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    background:
-        linear-gradient(110deg, rgba(255, 255, 255, 0.12) 16%, rgba(255, 255, 255, 0.32) 34%, rgba(255, 255, 255, 0.12) 52%),
-        linear-gradient(180deg, rgba(16, 27, 44, 0.24) 0%, rgba(16, 27, 44, 0.38) 100%);
-    background-size: 220% 100%, 100% 100%;
-    animation: dixeo-imageeditor-shimmer 1.8s linear infinite;
-    pointer-events: none;
 }
 
 .dixeo-imageeditor-modal__preview.is-generating::after {
