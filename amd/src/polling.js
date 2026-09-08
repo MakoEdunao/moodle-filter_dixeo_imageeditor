@@ -202,6 +202,13 @@ define([
                 return;
             }
 
+            // Claim the label immediately so local_dixeo status pills never flash.
+            Str.getString('generating_status', 'filter_dixeo_imageeditor').then((label) => {
+                setGeneratingOverlay(wrap, true, label);
+            }).catch(() => {
+                setGeneratingOverlay(wrap, true, '');
+            });
+
             const resume = async() => {
                 try {
                     const status = await Ajax.call([{
@@ -210,11 +217,12 @@ define([
                     }])[0];
 
                     if (status?.status === 'pending' || status?.status === 'processing') {
-                        const label = await Str.getString('generating_status', 'filter_dixeo_imageeditor');
-                        setGeneratingOverlay(wrap, true, label);
                         startStatusPolling(wrap);
+                    } else {
+                        setGeneratingOverlay(wrap, false);
                     }
                 } catch {
+                    setGeneratingOverlay(wrap, false);
                     // Ignore resume failures on pages without webservice access.
                 }
             };

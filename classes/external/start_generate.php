@@ -111,7 +111,7 @@ final class start_generate extends external_api {
         $title = image_generation_service::resolve_title_for_stored_file($file);
         $binding = job_binding_metadata::for_stored_file($file);
 
-        $imageservice = service_factory::get_image_generation_service();
+        $imageservice = service_factory::get_image_generation_service('filter_dixeo_imageeditor');
         $result = $imageservice->submit_content_image_generate_job(
             $location->courseid,
             $title,

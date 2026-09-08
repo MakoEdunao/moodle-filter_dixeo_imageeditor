@@ -25,9 +25,9 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'filter_dixeo_imageeditor';
-$plugin->version = 2026070602;
+$plugin->version = 2026090700;
 $plugin->requires = 2024100100;
 $plugin->dependencies = [
-    'local_dixeo' => 2026072402,
+    'local_dixeo' => 2026090703,
 ];
 $plugin->maturity = MATURITY_BETA;

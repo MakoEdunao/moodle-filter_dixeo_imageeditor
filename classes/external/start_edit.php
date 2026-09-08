@@ -114,7 +114,7 @@ final class start_edit extends external_api {
         $file = $location->get_stored_file();
         $binding = $file ? job_binding_metadata::for_stored_file($file) : null;
 
-        $imageservice = service_factory::get_image_generation_service();
+        $imageservice = service_factory::get_image_generation_service('filter_dixeo_imageeditor');
         $result = $imageservice->submit_content_image_edit_job(
             $location->courseid,
             [$b64],
