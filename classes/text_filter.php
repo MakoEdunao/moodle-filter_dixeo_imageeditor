@@ -20,6 +20,7 @@ use filter_dixeo_imageeditor\adapter\eligibility;
 use filter_dixeo_imageeditor\adapter\feature_gate;
 use filter_dixeo_imageeditor\adapter\file_replacer;
 use local_dixeo\repository\image\job_repository;
+use local_dixeo\service\image\content\asset_helper;
 use local_dixeo\service\image\content\location;
 
 /**
@@ -106,6 +107,18 @@ class text_filter extends \core_filters\text_filter {
 
             $contenthash = $file->get_contenthash();
             $img->setAttribute('src', file_replacer::get_current_image_url($location));
+
+            // Successful file after a failed gen: strip stale status classes/hash so
+            // content_image_pending does not re-bust to a cached error.png URL.
+            if (!asset_helper::is_status_asset_hash($contenthash)) {
+                $class = trim(preg_replace(
+                    '/\s*\bdixeo-img-gen-(?:pending|failed)\b/u',
+                    '',
+                    $img->getAttribute('class')
+                ) ?? '');
+                $img->setAttribute('class', $class);
+                $img->setAttribute('data-dixeo-contenthash', $contenthash);
+            }
 
             $wrapper = $dom->createElement('span');
             $wrapper->setAttribute('class', 'dixeo-imageeditor-wrap');

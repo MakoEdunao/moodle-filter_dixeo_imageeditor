@@ -16,6 +16,7 @@
 
 namespace filter_dixeo_imageeditor\adapter;
 
+use local_dixeo\service\image\content\asset_helper;
 use local_dixeo\service\image\content\location;
 use local_dixeo\service\image\result_helper;
 use filter_dixeo_imageeditor\event\content_image_updated;
@@ -59,6 +60,10 @@ final class file_replacer {
         );
         $history = [];
         foreach ($records as $record) {
+            // Never expose placeholder/error stubs even if they were archived earlier.
+            if (asset_helper::is_status_asset_hash((string) $record->contenthash)) {
+                continue;
+            }
             $history[] = self::format_version_record($record, $location);
         }
         return $history;
@@ -193,6 +198,10 @@ final class file_replacer {
         }
 
         $contenthash = $file->get_contenthash();
+        // Pending/failure stubs must not enter version history (e.g. retry after error.png).
+        if (asset_helper::is_status_asset_hash($contenthash)) {
+            return null;
+        }
         if (self::has_history_contenthash($location, $contenthash)) {
             return null;
         }

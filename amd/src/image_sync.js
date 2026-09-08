@@ -87,9 +87,14 @@ define([], function() {
         }
         const hash = contenthash || wrap.dataset.contenthash || '';
         img.src = appendImageRev(imageurl, hash);
+        img.classList.remove('dixeo-img-gen-pending', 'dixeo-img-gen-failed');
         if (hash) {
             wrap.dataset.contenthash = hash;
+            img.setAttribute('data-dixeo-contenthash', hash);
+        } else {
+            img.removeAttribute('data-dixeo-contenthash');
         }
+        wrap.querySelectorAll(':scope > .dixeo-img-gen-status').forEach((el) => el.remove());
     };
 
     /**

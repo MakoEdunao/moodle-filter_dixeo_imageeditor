@@ -325,4 +325,85 @@ final class file_replacer_test extends \advanced_testcase {
             $this->assertSame('error_delete_current', $e->errorcode);
         }
     }
+
+    /**
+     * Retrying after a failed generation must not archive error.png into history.
+     */
+    public function test_apply_binary_skips_archiving_error_asset(): void {
+        global $USER, $DB;
+
+        [$location] = $this->create_page_image_location();
+        $file = $location->get_stored_file();
+        $this->assertNotFalse($file);
+
+        // Simulate a failed apply leaving the error stub as the current file.
+        $fs = get_file_storage();
+        $usercontext = \context_user::instance($USER->id);
+        $draftitemid = file_get_unused_draft_itemid();
+        $temp = $fs->create_file_from_string([
+            'contextid' => $usercontext->id,
+            'component' => 'user',
+            'filearea' => 'draft',
+            'itemid' => $draftitemid,
+            'filepath' => '/',
+            'filename' => 'error-stub.png',
+            'userid' => (int) $USER->id,
+        ], \local_dixeo\service\image\content\asset_helper::get_error_binary());
+        $file->replace_file_with($temp);
+        $temp->delete();
+
+        $errorhash = $location->get_stored_file()->get_contenthash();
+        $this->assertTrue(
+            \local_dixeo\service\image\content\asset_helper::is_status_asset_hash($errorhash)
+        );
+
+        file_replacer::apply_binary(
+            $location,
+            self::fixture_jpeg_bytes(),
+            (int) $USER->id,
+            file_replacer::SOURCE_GENERATED
+        );
+
+        $versions = $DB->get_records('filter_dixeo_imageeditor_version', [
+            'locationhash' => $location->hash(),
+        ]);
+        $this->assertCount(0, $versions);
+        $this->assertSame([], file_replacer::get_history_for_location($location));
+    }
+
+    /**
+     * Pending placeholder stubs must not be archived either.
+     */
+    public function test_apply_binary_skips_archiving_placeholder_asset(): void {
+        global $USER, $DB;
+
+        [$location] = $this->create_page_image_location();
+        $file = $location->get_stored_file();
+
+        $fs = get_file_storage();
+        $usercontext = \context_user::instance($USER->id);
+        $draftitemid = file_get_unused_draft_itemid();
+        $temp = $fs->create_file_from_string([
+            'contextid' => $usercontext->id,
+            'component' => 'user',
+            'filearea' => 'draft',
+            'itemid' => $draftitemid,
+            'filepath' => '/',
+            'filename' => 'placeholder-stub.png',
+            'userid' => (int) $USER->id,
+        ], \local_dixeo\service\image\content\asset_helper::get_placeholder_binary());
+        $file->replace_file_with($temp);
+        $temp->delete();
+
+        file_replacer::apply_binary(
+            $location,
+            self::fixture_jpeg_bytes(),
+            (int) $USER->id,
+            file_replacer::SOURCE_GENERATED
+        );
+
+        $this->assertCount(0, $DB->get_records('filter_dixeo_imageeditor_version', [
+            'locationhash' => $location->hash(),
+        ]));
+    }
 }
